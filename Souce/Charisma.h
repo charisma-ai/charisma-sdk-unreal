@@ -189,7 +189,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCharismaErrorDelegate, FCharismaErr
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FReadyDelegate);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class DEMONSTRATOR_5G_API UCharisma : public UObject
+class CHARISMA_API UCharisma : public UObject
 {
 	GENERATED_BODY()
 
@@ -231,7 +231,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Interaction)
 	void SetMood(FString TokenForSetMood, FString CharacterName, FMood Mood);
 
-    UFUNCTION(BlueprintCallable, Category = Connection)
+    	UFUNCTION(BlueprintCallable, Category = Connection)
 	void Connect(FString TokenForPlay, bool VerboseLogging = false);
 
 	UFUNCTION(BlueprintCallable, Category = Connection)
