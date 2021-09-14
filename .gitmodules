@@ -1,0 +1,3 @@
+[submodule "Source/ThirdParty/colyseus-ue4"]
+	path = Source/ThirdParty/colyseus-ue4
+	url = https://github.com/charisma-ai/colyseus-ue4
