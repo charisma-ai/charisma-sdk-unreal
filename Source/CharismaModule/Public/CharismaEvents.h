@@ -222,7 +222,9 @@ struct FCharismaMemory
 	UPROPERTY(BlueprintReadWrite)
 	FString SaveValue;
 
-	MSGPACK_DEFINE_MAP(MSGPACK_NVP("recallValue", RecallValue), MSGPACK_NVP("saveValue", SaveValue));
+	TOptional<FString> SaveValue_Optional;
+
+	MSGPACK_DEFINE_MAP(MSGPACK_NVP("recallValue", RecallValue), MSGPACK_NVP("saveValue", SaveValue_Optional));
 };
 
 USTRUCT(BlueprintType)
@@ -272,11 +274,15 @@ struct FCharismaMessage
 	UPROPERTY(BlueprintReadOnly)
 	FCharismaCharacter Character;
 
+	TOptional<FCharismaCharacter> Character_Optional;
+
 	UPROPERTY(BlueprintReadOnly)
 	FCharismaSpeech Speech;
 
-	MSGPACK_DEFINE_MAP(MSGPACK_NVP("text", Text), MSGPACK_NVP("metadata", Metadata), MSGPACK_NVP("character", Character),
-		MSGPACK_NVP("speech", Speech));
+	TOptional<FCharismaSpeech> Speech_Optional;
+
+	MSGPACK_DEFINE_MAP(MSGPACK_NVP("text", Text), MSGPACK_NVP("metadata", Metadata), MSGPACK_NVP("character", Character_Optional),
+		MSGPACK_NVP("speech", Speech_Optional));
 };
 
 USTRUCT(BlueprintType)

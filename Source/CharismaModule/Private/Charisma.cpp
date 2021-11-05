@@ -261,12 +261,36 @@ void UCharisma::Connect(const FString& Token, const int32 PlaythroughId)
 				[this](const msgpack::object& message)
 				{
 					FCharismaMessageEvent Event = message.as<FCharismaMessageEvent>();
-					Log(-1, Event.Message.Character.Name + TEXT(": ") + Event.Message.Text, Info);
+
+					if (Event.Message.Character_Optional.IsSet())
+					{
+						Event.Message.Character = Event.Message.Character_Optional.GetValue();
+
+						if (Event.Message.Character.Avatar_Optional.IsSet())
+						{
+							Event.Message.Character.Avatar = Event.Message.Character.Avatar_Optional.GetValue();
+						}
+					}
+
+					if (Event.Message.Speech_Optional.IsSet())
+					{
+						Event.Message.Speech = Event.Message.Speech_Optional.GetValue();
+					}
+
+					for (FCharismaMemory& Memory : Event.Memories)
+					{
+						if (Memory.SaveValue_Optional.IsSet())
+						{
+							Memory.SaveValue = Memory.SaveValue_Optional.GetValue();
+						}
+					}
 
 					if (Event.EndStory)
 					{
 						this->bIsPlaying = false;
 					}
+
+					Log(-1, Event.Message.Character.Name + TEXT(": ") + Event.Message.Text, Info);
 
 					OnMessage.Broadcast(Event);
 				});
