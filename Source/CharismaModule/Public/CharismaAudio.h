@@ -60,6 +60,23 @@ public:
 		check(false);
 	}
 
+	virtual bool InitAudioResource(FName Format) override
+	{
+		if (!ResourceSize && (!FPlatformProperties::SupportsAudioStreaming() || !IsStreaming(nullptr)))
+		{
+			FByteBulkData* Bulk = GetCompressedData(Format, GetPlatformCompressionOverridesForCurrentPlatform());
+			if (Bulk)
+			{
+				ResourceSize = Bulk->GetBulkDataSize();
+				check(ResourceSize > 0);
+				check(!ResourceData);
+				Bulk->GetCopy((void**) &ResourceData, true);
+			}
+		}
+
+		return ResourceSize > 0;
+	}
+
 private:
 	FName OggFormatName = FName(TEXT("OGG"));
 };

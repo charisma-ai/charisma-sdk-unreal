@@ -97,6 +97,28 @@ void UCharisma::SetMemory(const FString& Token, const FString& RecallValue, cons
 	HttpRequest->ProcessRequest();
 }
 
+void UCharisma::RestartFromEventId(const FString& TokenForRestart, const int64 EventId) const
+{
+	TSharedPtr<FJsonObject> RequestData = MakeShareable(new FJsonObject);
+	RequestData->SetStringField("eventId", FString::Printf(TEXT("%lld"), EventId));
+
+	FString OutputString;
+	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
+	FJsonSerializer::Serialize(RequestData.ToSharedRef(), Writer);
+
+	FHttpModule* HttpModule = &FHttpModule::Get();
+	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = HttpModule->CreateRequest();
+
+	HttpRequest->SetVerb("POST");
+	HttpRequest->SetHeader("Authorization", "Bearer " + TokenForRestart);
+	HttpRequest->AppendToHeader("Content-Type", "application/json");
+	HttpRequest->SetURL(BaseURL + "/play/restart-from-event/");
+	HttpRequest->SetContentAsString(OutputString);
+	HttpRequest->OnProcessRequestComplete().BindUObject(this, &UCharisma::OnRestartRequestComplete);
+
+	HttpRequest->ProcessRequest();
+}
+
 void UCharisma::OnTokenRequestComplete(
 	const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful) const
 {
@@ -183,6 +205,27 @@ void UCharisma::OnSetMemory(FHttpRequestPtr Request, FHttpResponsePtr Response, 
 			Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
 			Args.Add(FStringFormatArg(Content));
 			Log(0, FString::Format(TEXT("{0}, {1}."), Args), Error, 5.f);
+		}
+	}
+}
+
+void UCharisma::OnRestartRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const
+{
+	if (WasSuccessful)
+	{
+		const int32 ResponseCode = Response->GetResponseCode();
+		const FString Content = Response->GetContentAsString();
+
+		if (ResponseCode == 200)
+		{
+			Log(-1, "Restarted from chosen event", Info);
+		}
+		else
+		{
+			TArray<FStringFormatArg> Args;
+			Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
+			Args.Add(FStringFormatArg(Content));
+			Log(-1, FString::Format(TEXT("{0}, {1}."), Args), Error, 5.f);
 		}
 	}
 }
@@ -288,7 +331,7 @@ void UCharisma::Action(const int32 ConversationId, const FString& ActionName) co
 }
 
 void UCharisma::Start(const int32 ConversationId, const int32 SceneIndex, const int32 StartGraphId,
-	const int32 StartGraphReferenceId, const bool UseSpeech)
+	const FString& StartGraphReferenceId, const bool UseSpeech)
 {
 	if (!RoomInstance)
 	{
@@ -301,9 +344,21 @@ void UCharisma::Start(const int32 ConversationId, const int32 SceneIndex, const 
 
 	StartPayload payload;
 	payload.conversationId = ConversationId;
-	payload.sceneIndex = SceneIndex;
-	// payload.startGraphId = StartGraphId;
-	// payload.startGraphReferenceId = StartGraphReferenceId;
+
+	if (SceneIndex)
+	{
+		payload.sceneIndex = SceneIndex;
+	}
+
+	if (StartGraphId)
+	{
+		payload.startGraphId = StartGraphId;
+	}
+
+	if (!StartGraphReferenceId.IsEmpty())
+	{
+		payload.startGraphReferenceId = FStringToStdString(StartGraphReferenceId);
+	}
 
 	if (bUseSpeech)
 	{

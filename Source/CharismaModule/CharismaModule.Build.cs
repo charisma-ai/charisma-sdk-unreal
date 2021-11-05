@@ -6,6 +6,7 @@ public class CharismaModule : ModuleRules
 	public CharismaModule(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+		bEnableExceptions = true;
 
 		PublicIncludePaths.AddRange(
 			new string[] {
@@ -15,7 +16,7 @@ public class CharismaModule : ModuleRules
 
 		PrivateIncludePaths.AddRange(
 			new string[] {
-				// ...				
+				// ...
 			}
 		);
 

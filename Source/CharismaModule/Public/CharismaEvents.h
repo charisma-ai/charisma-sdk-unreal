@@ -34,6 +34,20 @@ MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
 		}
 	};
 
+	template <typename T>
+	struct pack<TOptional<T>>
+	{
+		template <typename Stream>
+		msgpack::packer<Stream>& operator()(msgpack::packer<Stream>& o, const TOptional<T>& v) const
+		{
+			if (v.IsSet())
+				o.pack(*v);
+			else
+				o.pack_nil();
+			return o;
+		}
+	};
+
 	template <>
 	struct convert<FString>
 	{
@@ -326,24 +340,24 @@ struct ActionPayload
 {
 	int32 conversationId;
 	std::string action;
-	SpeechConfig speechConfig;
+	TOptional<SpeechConfig> speechConfig;
 	MSGPACK_DEFINE_MAP(conversationId, action, speechConfig);
 };
 
 struct StartPayload
 {
 	int32 conversationId;
-	int32 sceneIndex;
-	// int32 startGraphId;
-	// int32 startGraphReferenceId;
-	SpeechConfig speechConfig;
-	MSGPACK_DEFINE_MAP(conversationId, sceneIndex, speechConfig);
+	TOptional<int32> sceneIndex;
+	TOptional<int32> startGraphId;
+	TOptional<std::string> startGraphReferenceId;
+	TOptional<SpeechConfig> speechConfig;
+	MSGPACK_DEFINE_MAP(conversationId, sceneIndex, startGraphId, startGraphReferenceId, speechConfig);
 };
 
 struct TapPayload
 {
 	int32 conversationId;
-	SpeechConfig speechConfig;
+	TOptional<SpeechConfig> speechConfig;
 	MSGPACK_DEFINE_MAP(conversationId, speechConfig);
 };
 
@@ -351,13 +365,13 @@ struct ReplyPayload
 {
 	int32 conversationId;
 	std::string text;
-	SpeechConfig speechConfig;
+	TOptional<SpeechConfig> speechConfig;
 	MSGPACK_DEFINE_MAP(conversationId, text, speechConfig);
 };
 
 struct ResumePayload
 {
 	int32 conversationId;
-	SpeechConfig speechConfig;
+	TOptional<SpeechConfig> speechConfig;
 	MSGPACK_DEFINE_MAP(conversationId, speechConfig);
 };

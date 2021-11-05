@@ -53,6 +53,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Interaction)
 	void SetMemory(const FString& PlaythroughToken, const FString& RecallValue, const FString& SaveValue) const;
 
+	UFUNCTION(BlueprintCallable, Category = Interaction)
+	void RestartFromEventId(const FString& PlaythroughToken, const int64 EventId) const;
+
 	UFUNCTION(BlueprintCallable, Category = Connection)
 	void Connect(const FString& Token, const int32 PlaythroughId);
 
@@ -63,7 +66,7 @@ public:
 	void Action(const int32 ConversationId, const FString& ActionName) const;
 
 	UFUNCTION(BlueprintCallable, Category = Play)
-	void Start(const int32 ConversationId, const int32 SceneIndex, const int32 StartGraphId, const int32 StartGraphReferenceId,
+	void Start(const int32 ConversationId, const int32 SceneIndex, const int32 StartGraphId, const FString& StartGraphReferenceId,
 		const bool UseSpeech = false);
 
 	UFUNCTION(BlueprintCallable, Category = Play)
@@ -120,6 +123,8 @@ private:
 	void OnConversationRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
 
 	void OnSetMemory(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
+
+	void OnRestartRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
 
 	SpeechConfig GetSpeechConfig() const;
 
