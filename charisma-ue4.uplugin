@@ -1,19 +1,18 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "1.0",
+	"VersionName": "0.1.0",
 	"FriendlyName": "Charisma",
-	"Description": "Charisma SDK for Unreal Engine 4.26",
+	"Description": "Charisma SDK for Unreal Engine 4",
 	"Category": "Charisma",
-	"CreatedBy": "Charisma.ai",
+	"CreatedBy": "Charisma Entertainment",
 	"CreatedByURL": "https://charisma.ai/",
 	"DocsURL": "https://charisma.ai/docs",
 	"MarketplaceURL": "",
-	"SupportURL": "",
+	"SupportURL": "https://charisma.ai/docs/troubleshooting#get-help",
 	"CanContainContent": false,
 	"IsBetaVersion": true,
 	"IsExperimentalVersion": false,
-	"Installed": false,
 	"Modules": [
 		{
 			"Name": "CharismaModule",
