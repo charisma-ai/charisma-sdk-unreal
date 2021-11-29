@@ -1,53 +1,53 @@
 # Charisma SDK for Unreal Engine 4
 
-Support: `oscar@charisma.ai`
+This Unreal Engine plugin is verified to work for engine version `4.26` only. If you find the plugin also works in another version, feel free to submit a pull request to update this!
 
-The plugin is verified for engine versions: `[4.26]`
+If you have any questions or need a hand, please reach out to us at [hello@charisma.ai](mailto:hello@charisma.ai)!
 
-**NOTE: This document is incomplete. To read about the usage of Charisma in UE4 blueprints, please refer to this document:** https://docs.google.com/document/d/1z64Xhe9ij9hpjum1bOzfNEQ8bhwmtHLdiXOlgYsjwFY/edit?usp=sharing
+## Getting started
 
-## Get Started
+**Important:** Before setting up the Charisma SDK for UE4, you’ll need to have created a web or game story (not an app story!), which requires a Charisma licence. Please visit the [licencing docs on our website](https://charisma.ai/docs/licencing) for more info!
 
-* Before getting started with the Charisma SDK for UE4, you will need a story to interact with. To create a story, please visit: https://charisma.ai to get started.
+1. If you haven’t already, go ahead and create an Unreal project! Make sure you are using a version of the engine that is supported by this plugin.
 
-* If you dont have a project to add the plugin to, create one.
+2. Move the contents of this repository to the `/Plugins` folder located at the root of your project. If this folder doesn’t exist, create it!
 
-* Move the contents of this folder to the `/Plugins` located at the root of your project. If this folder doesn't exit, create it.
+3. Close the UE4 editor and rebuild the project in Visual Studio.
 
-* Close the UE4 editor and rebuild the project in Visual Studio.
-
-* When you next open the editor, verify the plugin loaded correctly by navigating to `/Settings/Plugins` and locate the Charisma plugin. It should looks something like this:
-
+4. When you next open the editor, verify the plugin loaded correctly by navigating to `Settings -> Plugins` and locating the Charisma plugin. It should look something like this:
 
 ![StoryId](https://i.ibb.co/6Y5qyK6/charisma-plugin.png)
 
-* You can now start using Charisma in UE4.
+5. You can now start using Charisma in UE4! 🎉
 
-## Story Credentials
+## Usage (Blueprints)
 
-In order to play Charisma stories from UE4 you will need a both a `storyId` as well as an `apiKey` (the API-Key is only required to play the draft( unpublished) version of your story).
+We’re working on a new version of the documentation for this plugin. In the meanwhile, to read about the usage of Charisma in UE4 blueprints, [please refer to this document](https://docs.google.com/document/d/1z64Xhe9ij9hpjum1bOzfNEQ8bhwmtHLdiXOlgYsjwFY/edit?usp=sharing).
 
-### Story Id
+In order to play Charisma stories from UE4 you’ll need a `StoryId`, and to play the draft (unpublished) version of your story, you’ll also need an `ApiKey`.
 
-The `storyId` is the unique id of the story that you want to play. To find this, navigate to the Charisma website and the story you want to play from UE4. The `storyId` can be found in the URL as shown in the image below.
+These parameters are then passed to the `CreatePlaythroughToken` method to create a new playthrough for each of your players to play the story within!
+
+### Story ID
+
+The `StoryId` is the unique ID of the story that you want to play. To find this, navigate to your story on the Charisma website, and copy the ID number after `/stories` in the URL.
 
 ![StoryId](https://i.ibb.co/sPqS9n2/StoryId.png)
 
-### API-Key
+### API key
 
-To play the draft version of your story you have to supply the `Charisma` object with your stories apiKey before acquiring the `playthroughToken`.
+To create a playthrough that references the draft version of your story, you also need to provide an `ApiKey`. This can be found on the 'Story Overview' page.
 
-An `apiKey` should now be used for authentication for playthrough token creation instead of `draftToken`. This is now the recommended way to authenticate as API keys do not expire (unless regenerated) and are more secure than the `draftToken` if compromised. `draftToken `should no longer be used. However, please make sure to not share the API key with anyone you do not trust, and strip the key from any public builds as before.
+**Important:** Please make sure to not share the API key with anyone you do not trust, and strip the API key from any public builds.
 
 ![API key](https://i.ibb.co/X86bNVK/API-key.png)
 
-### Starting A Story
+### Playing a story
 
-When starting a Charisma story from within UE4 you will first have to generate a `playthroughToken`. In the `createPlaythroughToken` method, you have to pass in both the `storyId` This is the version of the story you want to play.
+To start playing a Charisma story from within UE4 you’ll first need to generate a playthrough token using `CreatePlaythroughToken`, which has the following parameters.
 
-* To play the latest published version, keep this at 0.
-
-* To play a specific, published, version of your story, set the number to that particular version.
-
-* To play the draft version, set the number to -1. To do this, you must also supply your API-key to the `Charisma` object before calling the `createPlaythroughToken` method.
-
+- `StoryId` (`int32`): The `id` of the story that you want to create a new playthrough for. The story must be published, unless a Charisma.ai user token has been passed and the user matches the owner of the story.
+- `Version` (`int32`, optional): The `version` of the story that you want to create a new playthrough for.
+  - To play the latest published version, pass `0`.
+  - To play a specific, published, version of your story, set the number to that particular version.
+  - To play the draft version of a story, pass `-1` and supply an `ApiKey` to the `Charisma` object before calling the `CreatePlaythroughToken` method.
