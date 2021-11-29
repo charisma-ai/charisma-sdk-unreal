@@ -10,7 +10,7 @@ If you have any questions or need a hand, please reach out to us at [hello@chari
 
 1. If you haven’t already, go ahead and create an Unreal project! Make sure you are using a version of the engine that is supported by this plugin.
 
-2. Move the contents of this repository to the `/Plugins` folder located at the root of your project. If this folder doesn’t exist, create it!
+2. Head to the [Releases page](https://github.com/charisma-ai/charisma-sdk-ue4/releases) of this GitHub repository and download the latest release. Unzip the contents into the `/Plugins` folder located at the root of your project. If this folder doesn’t exist, create it!
 
 3. Close the UE4 editor and rebuild the project in Visual Studio.
 
@@ -20,7 +20,7 @@ If you have any questions or need a hand, please reach out to us at [hello@chari
 
 5. You can now start using Charisma in UE4! 🎉
 
-## Usage (Blueprints)
+## Usage
 
 We’re working on a new version of the documentation for this plugin. In the meanwhile, to read about the usage of Charisma in UE4 blueprints, [please refer to this document](https://docs.google.com/document/d/1z64Xhe9ij9hpjum1bOzfNEQ8bhwmtHLdiXOlgYsjwFY/edit?usp=sharing).
 
