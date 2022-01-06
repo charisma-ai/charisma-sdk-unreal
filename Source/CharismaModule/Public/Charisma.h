@@ -45,7 +45,7 @@ public:
 	// Member
 
 	UFUNCTION(BlueprintCallable, Category = Setup)
-	void CreatePlaythroughToken(const int32 StoryId, const int32 StoryVersion = 0) const;
+	void CreatePlaythroughToken(const int32 StoryId, const int32 StoryVersion, const FString& ApiKey) const;
 
 	UFUNCTION(BlueprintCallable, Category = Setup)
 	void CreateConversation(const FString& PlaythroughToken) const;
@@ -88,9 +88,6 @@ public:
 
 	UPROPERTY(BlueprintReadWrite)
 	FString PlaythroughToken;
-
-	UPROPERTY(BlueprintReadWrite)
-	FString ApiKey;
 
 	// Events
 

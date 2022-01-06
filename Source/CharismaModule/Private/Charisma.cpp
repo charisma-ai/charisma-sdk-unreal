@@ -23,7 +23,7 @@ UCharisma* UCharisma::CreateCharismaObject(UObject* Owner)
 	return NewObject<UCharisma>(Owner);
 }
 
-void UCharisma::CreatePlaythroughToken(const int32 StoryId, const int32 StoryVersion) const
+void UCharisma::CreatePlaythroughToken(const int32 StoryId, const int32 StoryVersion, const FString& ApiKey) const
 {
 	TSharedPtr<FJsonObject> RequestData = MakeShareable(new FJsonObject);
 	RequestData->SetNumberField("storyId", StoryId);
@@ -240,8 +240,7 @@ void UCharisma::Connect(const FString& Token, const int32 PlaythroughId)
 	ClientInstance = MakeShared<Client>(SocketURL);
 	Log(1, "Connecting...", Info);
 	ClientInstance->JoinOrCreate<void>("chat", {{"token", FStringToStdString(Token)}, {"playthroughId", PlaythroughId}},
-		[this](TSharedPtr<MatchMakeError> Error, TSharedPtr<Room<void>> Room)
-		{
+		[this](TSharedPtr<MatchMakeError> Error, TSharedPtr<Room<void>> Room) {
 			if (Error)
 			{
 				return;
@@ -257,56 +256,47 @@ void UCharisma::Connect(const FString& Token, const int32 PlaythroughId)
 			this->RoomInstance->OnMessage(
 				"status", [](const msgpack::object& message) { Log(-1, TEXT("Ready to begin playing."), Info); });
 
-			this->RoomInstance->OnMessage("message",
-				[this](const msgpack::object& message)
+			this->RoomInstance->OnMessage("message", [this](const msgpack::object& message) {
+				FCharismaMessageEvent Event = message.as<FCharismaMessageEvent>();
+
+				if (Event.Message.Character_Optional.IsSet())
 				{
-					FCharismaMessageEvent Event = message.as<FCharismaMessageEvent>();
+					Event.Message.Character = Event.Message.Character_Optional.GetValue();
+				}
 
-					if (Event.Message.Character_Optional.IsSet())
+				if (Event.Message.Speech_Optional.IsSet())
+				{
+					Event.Message.Speech = Event.Message.Speech_Optional.GetValue();
+				}
+
+				for (FCharismaMemory& Memory : Event.Memories)
+				{
+					if (Memory.SaveValue_Optional.IsSet())
 					{
-						Event.Message.Character = Event.Message.Character_Optional.GetValue();
-
-						if (Event.Message.Character.Avatar_Optional.IsSet())
-						{
-							Event.Message.Character.Avatar = Event.Message.Character.Avatar_Optional.GetValue();
-						}
+						Memory.SaveValue = Memory.SaveValue_Optional.GetValue();
 					}
+				}
 
-					if (Event.Message.Speech_Optional.IsSet())
-					{
-						Event.Message.Speech = Event.Message.Speech_Optional.GetValue();
-					}
+				if (Event.EndStory)
+				{
+					this->bIsPlaying = false;
+				}
 
-					for (FCharismaMemory& Memory : Event.Memories)
-					{
-						if (Memory.SaveValue_Optional.IsSet())
-						{
-							Memory.SaveValue = Memory.SaveValue_Optional.GetValue();
-						}
-					}
+				Log(-1, Event.Message.Character.Name + TEXT(": ") + Event.Message.Text, Info);
 
-					if (Event.EndStory)
-					{
-						this->bIsPlaying = false;
-					}
-
-					Log(-1, Event.Message.Character.Name + TEXT(": ") + Event.Message.Text, Info);
-
-					OnMessage.Broadcast(Event);
-				});
+				OnMessage.Broadcast(Event);
+			});
 
 			this->RoomInstance->OnMessage("start-typing", [this](const msgpack::object& message) { OnTyping.Broadcast(true); });
 			this->RoomInstance->OnMessage("stop-typing", [this](const msgpack::object& message) { OnTyping.Broadcast(false); });
 
-			this->RoomInstance->OnMessage("problem",
-				[this](const msgpack::object& message)
-				{
-					FCharismaErrorEvent Event = message.as<FCharismaErrorEvent>();
+			this->RoomInstance->OnMessage("problem", [this](const msgpack::object& message) {
+				FCharismaErrorEvent Event = message.as<FCharismaErrorEvent>();
 
-					Log(-1, Event.Error, ECharismaLogSeverity::Error);
+				Log(-1, Event.Error, ECharismaLogSeverity::Error);
 
-					OnError.Broadcast(Event);
-				});
+				OnError.Broadcast(Event);
+			});
 
 			this->RoomInstance->OnLeave = ([this]() {
 				Log(-1, "Disconnected.", Info);
