@@ -9,6 +9,24 @@
 const FString UCharisma::BaseURL = TEXT("https://play.charisma.ai");
 const FString UCharisma::SocketURL = UCharisma::BaseURL.Replace(TEXT("http"), TEXT("ws"));
 
+FString ToQueryString(const TMap<FString, FString>& QueryParams)
+{
+	if (!QueryParams.Num())
+	{
+		return TEXT("");
+	}
+
+	FString Result;
+	for (const TPair<FString, FString>& Pair : QueryParams)
+	{
+		Result.Append(Pair.Key);
+		Result.Append(TEXT(""));
+		Result.Append(Pair.Value);
+	}
+
+	return Result;
+}
+
 UCharisma::UCharisma()
 {
 }
@@ -54,7 +72,7 @@ void UCharisma::CreatePlaythroughToken(const int32 StoryId, const int32 StoryVer
 
 	HttpRequest->SetVerb("POST");
 	HttpRequest->AppendToHeader("Content-Type", "application/json");
-	HttpRequest->SetURL(BaseURL + "/play/token/");
+	HttpRequest->SetURL(BaseURL + "/play/token");
 	HttpRequest->SetContentAsString(OutputString);
 	HttpRequest->OnProcessRequestComplete().BindUObject(this, &UCharisma::OnTokenRequestComplete);
 
@@ -68,7 +86,7 @@ void UCharisma::CreateConversation(const FString& Token) const
 
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Authorization", "Bearer " + Token);
-	HttpRequest->SetURL(BaseURL + "/play/conversation/");
+	HttpRequest->SetURL(BaseURL + "/play/conversation");
 	HttpRequest->OnProcessRequestComplete().BindUObject(this, &UCharisma::OnConversationRequestComplete);
 
 	HttpRequest->ProcessRequest();
@@ -90,7 +108,7 @@ void UCharisma::SetMemory(const FString& Token, const FString& RecallValue, cons
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Authorization", "Bearer " + Token);
 	HttpRequest->AppendToHeader("Content-Type", "application/json");
-	HttpRequest->SetURL(BaseURL + "/play/set-memory/");
+	HttpRequest->SetURL(BaseURL + "/play/set-memory");
 	HttpRequest->SetContentAsString(OutputString);
 	HttpRequest->OnProcessRequestComplete().BindUObject(this, &UCharisma::OnSetMemory);
 
@@ -112,9 +130,47 @@ void UCharisma::RestartFromEventId(const FString& TokenForRestart, const int64 E
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Authorization", "Bearer " + TokenForRestart);
 	HttpRequest->AppendToHeader("Content-Type", "application/json");
-	HttpRequest->SetURL(BaseURL + "/play/restart-from-event/");
+	HttpRequest->SetURL(BaseURL + "/play/restart-from-event");
 	HttpRequest->SetContentAsString(OutputString);
 	HttpRequest->OnProcessRequestComplete().BindUObject(this, &UCharisma::OnRestartRequestComplete);
+
+	HttpRequest->ProcessRequest();
+}
+
+void UCharisma::GetMessageHistory(const FString& Token, const int32 ConversationId, const int64 MinEventId) const
+{
+	FHttpModule* HttpModule = &FHttpModule::Get();
+	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = HttpModule->CreateRequest();
+
+	TMap<FString, FString> QueryParams;
+	if (ConversationId)
+	{
+		QueryParams.Add("conversationId", FString::Printf(TEXT("%d"), ConversationId));
+	}
+	if (MinEventId)
+	{
+		QueryParams.Add("minEventId", FString::Printf(TEXT("%lld"), MinEventId));
+	}
+
+	FString Query = ToQueryString(QueryParams);
+
+	HttpRequest->SetVerb("GET");
+	HttpRequest->SetHeader("Authorization", "Bearer " + Token);
+	HttpRequest->SetURL(BaseURL + "/play/message-history" + Query);
+	HttpRequest->OnProcessRequestComplete().BindUObject(this, &UCharisma::OnMessageHistoryComplete);
+
+	HttpRequest->ProcessRequest();
+}
+
+void UCharisma::GetPlaythroughInfo(const FString& Token) const
+{
+	FHttpModule* HttpModule = &FHttpModule::Get();
+	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = HttpModule->CreateRequest();
+
+	HttpRequest->SetVerb("GET");
+	HttpRequest->SetHeader("Authorization", "Bearer " + Token);
+	HttpRequest->SetURL(BaseURL + "/play/playthrough-info");
+	HttpRequest->OnProcessRequestComplete().BindUObject(this, &UCharisma::OnPlaythroughInfoComplete);
 
 	HttpRequest->ProcessRequest();
 }
@@ -219,6 +275,64 @@ void UCharisma::OnRestartRequestComplete(FHttpRequestPtr Request, FHttpResponseP
 		if (ResponseCode == 200)
 		{
 			Log(-1, "Restarted from chosen event", Info);
+		}
+		else
+		{
+			TArray<FStringFormatArg> Args;
+			Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
+			Args.Add(FStringFormatArg(Content));
+			Log(-1, FString::Format(TEXT("{0}, {1}."), Args), Error, 5.f);
+		}
+	}
+}
+
+void UCharisma::OnMessageHistoryComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const
+{
+	if (WasSuccessful)
+	{
+		const int32 ResponseCode = Response->GetResponseCode();
+		const FString Content = Response->GetContentAsString();
+
+		if (ResponseCode == 200)
+		{
+			FCharismaMessageHistoryResponse MessageHistory;
+			if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &MessageHistory, 0, 0))
+			{
+				OnMessageHistory.Broadcast(MessageHistory);
+			}
+			else
+			{
+				Log(-1, "Failed to deserialize message history response data.", Error, 5.f);
+			}
+		}
+		else
+		{
+			TArray<FStringFormatArg> Args;
+			Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
+			Args.Add(FStringFormatArg(Content));
+			Log(-1, FString::Format(TEXT("{0}, {1}."), Args), Error, 5.f);
+		}
+	}
+}
+
+void UCharisma::OnPlaythroughInfoComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const
+{
+	if (WasSuccessful)
+	{
+		const int32 ResponseCode = Response->GetResponseCode();
+		const FString Content = Response->GetContentAsString();
+
+		if (ResponseCode == 200)
+		{
+			FCharismaPlaythroughInfoResponse PlaythroughInfo;
+			if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &PlaythroughInfo, 0, 0))
+			{
+				OnPlaythroughInfo.Broadcast(PlaythroughInfo);
+			}
+			else
+			{
+				Log(-1, "Failed to deserialize playthrough info response data.", Error, 5.f);
+			}
 		}
 		else
 		{

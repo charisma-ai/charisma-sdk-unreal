@@ -15,8 +15,31 @@ enum ECharismaLogSeverity
 	Error
 };
 
+USTRUCT(BlueprintType)
+struct FCharismaMessageHistoryResponse
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(BlueprintReadWrite)
+	TArray<FCharismaMessage> Messages;
+};
+
+USTRUCT(BlueprintType)
+struct FCharismaPlaythroughInfoResponse
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(BlueprintReadWrite)
+	TArray<FCharismaEmotion> Emotions;
+
+	UPROPERTY(BlueprintReadWrite)
+	TArray<FCharismaMemory> Memories;
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTokenDelegate, FString, Token, int32, PlaythroughId);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FConversationDelegate, int32, ConversationId);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageHistoryDelegate, const FCharismaMessageHistoryResponse&, MessageHistory);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlaythroughInfoDelegate, const FCharismaPlaythroughInfoResponse&, PlaythroughInfo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FConnectionDelegate, bool, IsConnected);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTypingDelegate, bool, IsTyping);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageDelegate, const FCharismaMessageEvent&, MessageEvent);
@@ -55,6 +78,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = Interaction)
 	void RestartFromEventId(const FString& PlaythroughToken, const int64 EventId) const;
+
+	UFUNCTION(BlueprintCallable, Category = Interaction)
+	void GetMessageHistory(const FString& PlaythroughToken, const int32 ConversationId, const int64 MinEventId) const;
+
+	UFUNCTION(BlueprintCallable, Category = Interaction)
+	void GetPlaythroughInfo(const FString& PlaythroughToken) const;
 
 	UFUNCTION(BlueprintCallable, Category = Connection)
 	void Connect(const FString& Token, const int32 PlaythroughId);
@@ -98,6 +127,12 @@ public:
 	FConversationDelegate OnConversationCreated;
 
 	UPROPERTY(BlueprintAssignable, Category = Events)
+	FMessageHistoryDelegate OnMessageHistory;
+
+	UPROPERTY(BlueprintAssignable, Category = Events)
+	FPlaythroughInfoDelegate OnPlaythroughInfo;
+
+	UPROPERTY(BlueprintAssignable, Category = Events)
 	FConnectionDelegate OnConnected;
 
 	UPROPERTY(BlueprintAssignable, Category = Events)
@@ -122,6 +157,10 @@ private:
 	void OnSetMemory(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
 
 	void OnRestartRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
+
+	void OnMessageHistoryComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
+
+	void OnPlaythroughInfoComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
 
 	SpeechConfig GetSpeechConfig() const;
 
