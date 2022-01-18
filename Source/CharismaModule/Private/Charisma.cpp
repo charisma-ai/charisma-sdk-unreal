@@ -579,15 +579,19 @@ void UCharisma::Log(const int32 Key, const FString& Message, const ECharismaLogS
 	{
 		case Info:
 			MessageColor = FColor::Green;
+			UE_LOG(LogTemp, Log, TEXT("Charisma: %s"), *Message);
 			break;
 		case Warning:
 			MessageColor = FColor::Orange;
+			UE_LOG(LogTemp, Warning, TEXT("Charisma: %s"), *Message);
 			break;
 		case Error:
 			MessageColor = FColor::Red;
+			UE_LOG(LogTemp, Error, TEXT("Charisma: %s"), *Message);
 			break;
 		default:
 			MessageColor = FColor::White;
+			UE_LOG(LogTemp, Log, TEXT("Charisma: %s"), *Message);
 	}
 
 	if (GEngine)
