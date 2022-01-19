@@ -1,28 +1,16 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
 #pragma once
 
 #include "CharismaEvents.h"
 #include "Client.h"
 #include "CoreMinimal.h"
+#include "UObject/NoExportTypes.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Room.h"
 
-#include "Charisma.generated.h"
+#include "Playthrough.generated.h"
 
-enum ECharismaLogSeverity
-{
-	Info,
-	Warning,
-	Error
-};
-
-USTRUCT(BlueprintType)
-struct FCharismaMessageHistoryResponse
-{
-	GENERATED_USTRUCT_BODY()
-
-	UPROPERTY(BlueprintReadWrite)
-	TArray<FCharismaMessage> Messages;
-};
 
 USTRUCT(BlueprintType)
 struct FCharismaPlaythroughInfoResponse
@@ -36,7 +24,6 @@ struct FCharismaPlaythroughInfoResponse
 	TArray<FCharismaMemory> Memories;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FTokenDelegate, FString, Token, int32, PlaythroughId);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FConversationDelegate, int32, ConversationId);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageHistoryDelegate, const FCharismaMessageHistoryResponse&, MessageHistory);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlaythroughInfoDelegate, const FCharismaPlaythroughInfoResponse&, PlaythroughInfo);
@@ -47,29 +34,15 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FErrorDelegate, const FCharismaError
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FReadyDelegate);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
-class CHARISMAMODULE_API UCharisma : public UObject
+class CHARISMAMODULE_API UPlaythrough : public UObject
 {
 	GENERATED_BODY()
 
 public:
-	UCharisma();
-	~UCharisma();
+	UPlaythrough();
+	~UPlaythrough();
 
-	// Static
-
-	static const FString BaseURL;
-	static const FString SocketURL;
-
-	UFUNCTION(BlueprintCallable, Category = Charisma)
-	static UCharisma* CreateCharismaObject(UObject* Owner);
-
-	static void Log(const int32 Key, const FString& Message, const ECharismaLogSeverity Severity, const float Duration = 5.f);
-
-	// Member
-
-	UFUNCTION(BlueprintCallable, Category = Setup)
-	void CreatePlaythroughToken(const int32 StoryId, const int32 StoryVersion, const FString& ApiKey) const;
-
+	//Member
 	UFUNCTION(BlueprintCallable, Category = Setup)
 	void CreateConversation(const FString& PlaythroughToken) const;
 
@@ -113,15 +86,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Play)
 	void ToggleSpeechOff();
 
-	// Properties
-
-	UPROPERTY(BlueprintReadWrite)
-	FString PlaythroughToken;
-
-	// Events
-
-	UPROPERTY(BlueprintAssignable, Category = Events)
-	FTokenDelegate OnTokenCreated;
+	//Events
 
 	UPROPERTY(BlueprintAssignable, Category = Events)
 	FConversationDelegate OnConversationCreated;
@@ -136,21 +101,19 @@ public:
 	FConnectionDelegate OnConnected;
 
 	UPROPERTY(BlueprintAssignable, Category = Events)
-	FReadyDelegate OnReady;
-
-	UPROPERTY(BlueprintAssignable, Category = Events)
-	FTypingDelegate OnTyping;
-
-	UPROPERTY(BlueprintAssignable, Category = Events)
 	FMessageDelegate OnMessage;
 
 	UPROPERTY(BlueprintAssignable, Category = Events)
 	FErrorDelegate OnError;
 
+	UPROPERTY(BlueprintAssignable, Category = Events)
+	FReadyDelegate OnReady;
+
+	UPROPERTY(BlueprintAssignable, Category = Events)
+	FTypingDelegate OnTyping;
+
 private:
 	// Member
-
-	void OnTokenRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
 
 	void OnConversationRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
 
@@ -173,4 +136,5 @@ private:
 	bool bUseSpeech = false;
 
 	bool bIsPlaying = false;
+	
 };
