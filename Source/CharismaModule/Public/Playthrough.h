@@ -24,6 +24,7 @@ struct FCharismaPlaythroughInfoResponse
 	TArray<FCharismaMemory> Memories;
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FTokenDelegate, FString, Token, int32, PlaythroughId, const UPlaythrough*, Playthrough);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FConversationDelegate, int32, ConversationId);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageHistoryDelegate, const FCharismaMessageHistoryResponse&, MessageHistory);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlaythroughInfoDelegate, const FCharismaPlaythroughInfoResponse&, PlaythroughInfo);
@@ -112,6 +113,13 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = Events)
 	FTypingDelegate OnTyping;
 
+	UPROPERTY(BlueprintAssignable, Category = Events)
+	FTokenDelegate OnTokenCreated;
+	UPROPERTY(BlueprintAssignable, Category = Events)
+	FTokenDelegate OnTokenFailCreation;
+
+	void OnTokenRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
+
 private:
 	// Member
 
@@ -135,6 +143,5 @@ private:
 
 	bool bUseSpeech = false;
 
-	bool bIsPlaying = false;
-	
+	bool bIsPlaying = false;	
 };

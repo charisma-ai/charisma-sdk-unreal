@@ -29,6 +29,43 @@ void UPlaythrough::CreateConversation(const FString& Token) const
 	HttpRequest->ProcessRequest();
 }
 
+void UPlaythrough::OnTokenRequestComplete(const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful) const
+{
+	if (WasSuccessful)
+	{
+		const int32 ResponseCode = Response->GetResponseCode();
+		const FString Content = Response->GetContentAsString();
+
+		if (ResponseCode == 200)
+		{
+			TSharedPtr<FJsonObject> ResponseData = MakeShareable(new FJsonObject);
+
+			const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Content);
+			if (FJsonSerializer::Deserialize(Reader, ResponseData))
+			{
+				const FString Token = ResponseData->GetStringField(TEXT("token"));
+				const int32 PlaythroughId = ResponseData->GetIntegerField(TEXT("playthroughId"));
+				OnTokenCreated.Broadcast(Token, PlaythroughId, this);
+			}
+			else
+			{
+				UCharismaAPI::Log(-2, "Failed to deserialize response data.", Error, 5.f);
+			}
+		}
+		else
+		{
+			const FString Token = "Null";
+			const int32 PlaythroughId = 0;
+			UPlaythrough* Playthrough = nullptr;
+			OnTokenFailCreation.Broadcast(Token, PlaythroughId, Playthrough);
+			TArray<FStringFormatArg> Args;
+			Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
+			Args.Add(FStringFormatArg(Content));
+			UCharismaAPI::Log(-2, FString::Format(TEXT("{0}, {1}."), Args), Error, 5.f);
+		}
+	}
+}
+
 void UPlaythrough::SetMemory(const FString& Token, const FString& RecallValue, const FString& SaveValue) const
 {
 	TSharedPtr<FJsonObject> RequestData = MakeShareable(new FJsonObject);

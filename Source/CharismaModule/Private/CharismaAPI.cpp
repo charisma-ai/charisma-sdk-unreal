@@ -28,14 +28,12 @@ FString UCharismaAPI::ToQueryString(const TMap<FString, FString>& QueryParams)
 	return Result;
 }
 
-
-UPlaythrough* UCharismaAPI::CreatePlaythrough(UObject* Owner, UCharismaAPI*& Charisma)
+void UCharismaAPI::CreateCharismaPlaythroughObject(UPlaythrough*& Playthrough)
 {
-	Charisma = NewObject<UCharismaAPI>(Owner);
-	return NewObject<UPlaythrough>(Owner);
+	Playthrough = NewObject<UPlaythrough>();
 }
 
-void UCharismaAPI::CreatePlaythroughToken(const int32 StoryId, const int32 StoryVersion, const FString& ApiKey) const
+ void UCharismaAPI::InitPlaythoughObject(const int32 StoryId, const int32 StoryVersion, const FString& ApiKey, UPlaythrough*& Playthrough)
 {
 	TSharedPtr<FJsonObject> RequestData = MakeShareable(new FJsonObject);
 	RequestData->SetNumberField("storyId", StoryId);
@@ -68,44 +66,9 @@ void UCharismaAPI::CreatePlaythroughToken(const int32 StoryId, const int32 Story
 	HttpRequest->AppendToHeader("Content-Type", "application/json");
 	HttpRequest->SetURL(BaseURL + "/play/token");
 	HttpRequest->SetContentAsString(OutputString);
-	HttpRequest->OnProcessRequestComplete().BindUObject(this, &UCharismaAPI::OnTokenRequestComplete);
+	HttpRequest->OnProcessRequestComplete().BindUObject(Playthrough, &UPlaythrough::OnTokenRequestComplete);
 
 	HttpRequest->ProcessRequest();
-}
-
-void UCharismaAPI::OnTokenRequestComplete(
-	const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful) const
-{
-	if (WasSuccessful)
-	{
-		const int32 ResponseCode = Response->GetResponseCode();
-		const FString Content = Response->GetContentAsString();
-
-		if (ResponseCode == 200)
-		{
-			TSharedPtr<FJsonObject> ResponseData = MakeShareable(new FJsonObject);
-
-			const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Content);
-			if (FJsonSerializer::Deserialize(Reader, ResponseData))
-			{
-				const FString Token = ResponseData->GetStringField(TEXT("token"));
-				const int32 PlaythroughId = ResponseData->GetIntegerField(TEXT("playthroughId"));
-
-				OnTokenCreated.Broadcast(Token, PlaythroughId);
-			}
-			else
-			{
-				Log(-2, "Failed to deserialize response data.", Error, 5.f);
-			}
-		}
-		else
-		{
-			TArray<FStringFormatArg> Args;
-			Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
-			Args.Add(FStringFormatArg(Content));
-			Log(-2, FString::Format(TEXT("{0}, {1}."), Args), Error, 5.f);
-		}
-	}
 }
 
 void UCharismaAPI::Log(const int32 Key, const FString& Message, const ECharismaLogSeverity Severity, const float Duration)
