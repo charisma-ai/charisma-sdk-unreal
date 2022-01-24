@@ -16,19 +16,6 @@ UPlaythrough::~UPlaythrough()
 	Disconnect();
 }
 
-void UPlaythrough::CreateConversation(const FString& Token) const
-{
-	FHttpModule* HttpModule = &FHttpModule::Get();
-	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = HttpModule->CreateRequest();
-	
-	HttpRequest->SetVerb("POST");
-	HttpRequest->SetHeader("Authorization", "Bearer " + Token);
-	HttpRequest->SetURL(UCharismaAPI::BaseURL + "/play/conversation");
-	HttpRequest->OnProcessRequestComplete().BindUObject(this, &UPlaythrough::OnConversationRequestComplete);
-
-	HttpRequest->ProcessRequest();
-}
-
 void UPlaythrough::OnTokenRequestComplete(const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful) const
 {
 	if (WasSuccessful)
@@ -64,89 +51,6 @@ void UPlaythrough::OnTokenRequestComplete(const FHttpRequestPtr Request, const F
 			UCharismaAPI::Log(-2, FString::Format(TEXT("{0}, {1}."), Args), Error, 5.f);
 		}
 	}
-}
-
-void UPlaythrough::SetMemory(const FString& Token, const FString& RecallValue, const FString& SaveValue) const
-{
-	TSharedPtr<FJsonObject> RequestData = MakeShareable(new FJsonObject);
-	RequestData->SetStringField("memoryRecallValue", RecallValue);
-	RequestData->SetStringField("saveValue", SaveValue);
-
-	FString OutputString;
-	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
-	FJsonSerializer::Serialize(RequestData.ToSharedRef(), Writer);
-
-	FHttpModule* HttpModule = &FHttpModule::Get();
-	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = HttpModule->CreateRequest();
-
-	HttpRequest->SetVerb("POST");
-	HttpRequest->SetHeader("Authorization", "Bearer " + Token);
-	HttpRequest->AppendToHeader("Content-Type", "application/json");
-	HttpRequest->SetURL(UCharismaAPI::BaseURL + "/play/set-memory");
-	HttpRequest->SetContentAsString(OutputString);
-	HttpRequest->OnProcessRequestComplete().BindUObject(this, &UPlaythrough::OnSetMemory);
-
-	HttpRequest->ProcessRequest();
-}
-
-void UPlaythrough::RestartFromEventId(const FString& TokenForRestart, const int64 EventId) const
-{
-	TSharedPtr<FJsonObject> RequestData = MakeShareable(new FJsonObject);
-	RequestData->SetStringField("eventId", FString::Printf(TEXT("%lld"), EventId));
-
-	FString OutputString;
-	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
-	FJsonSerializer::Serialize(RequestData.ToSharedRef(), Writer);
-
-	FHttpModule* HttpModule = &FHttpModule::Get();
-	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = HttpModule->CreateRequest();
-
-	HttpRequest->SetVerb("POST");
-	HttpRequest->SetHeader("Authorization", "Bearer " + TokenForRestart);
-	HttpRequest->AppendToHeader("Content-Type", "application/json");
-	HttpRequest->SetURL(UCharismaAPI::BaseURL + "/play/restart-from-event");
-	HttpRequest->SetContentAsString(OutputString);
-	HttpRequest->OnProcessRequestComplete().BindUObject(this, &UPlaythrough::OnRestartRequestComplete);
-
-	HttpRequest->ProcessRequest();
-}
-
-void UPlaythrough::GetMessageHistory(const FString& Token, const int32 ConversationId, const int64 MinEventId) const
-{
-	FHttpModule* HttpModule = &FHttpModule::Get();
-	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = HttpModule->CreateRequest();
-
-	TMap<FString, FString> QueryParams;
-	if (ConversationId)
-	{
-		QueryParams.Add("conversationId", FString::Printf(TEXT("%d"), ConversationId));
-	}
-	if (MinEventId)
-	{
-		QueryParams.Add("minEventId", FString::Printf(TEXT("%lld"), MinEventId));
-	}
-
-	FString Query = UCharismaAPI::ToQueryString(QueryParams);
-
-	HttpRequest->SetVerb("GET");
-	HttpRequest->SetHeader("Authorization", "Bearer " + Token);
-	HttpRequest->SetURL(UCharismaAPI::BaseURL + "/play/message-history" + Query);
-	HttpRequest->OnProcessRequestComplete().BindUObject(this, &UPlaythrough::OnMessageHistoryComplete);
-
-	HttpRequest->ProcessRequest();
-}
-
-void UPlaythrough::GetPlaythroughInfo(const FString& Token) const
-{
-	FHttpModule* HttpModule = &FHttpModule::Get();
-	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = HttpModule->CreateRequest();
-
-	HttpRequest->SetVerb("GET");
-	HttpRequest->SetHeader("Authorization", "Bearer " + Token);
-	HttpRequest->SetURL(UCharismaAPI::BaseURL + "/play/playthrough-info");
-	HttpRequest->OnProcessRequestComplete().BindUObject(this, &UPlaythrough::OnPlaythroughInfoComplete);
-
-	HttpRequest->ProcessRequest();
 }
 
 void UPlaythrough::OnConversationRequestComplete(

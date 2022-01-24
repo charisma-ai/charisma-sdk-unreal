@@ -6,6 +6,7 @@
 #include "Kismet/BlueprintAsyncActionBase.h"
 
 #include "Playthrough.h"
+#include "CharismaAPI.h"
 
 #include "PlaythroughCreateCharismaConversation.generated.h"
 

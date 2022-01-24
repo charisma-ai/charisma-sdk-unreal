@@ -24,6 +24,15 @@ struct FCharismaPlaythroughInfoResponse
 	TArray<FCharismaMemory> Memories;
 };
 
+USTRUCT(BlueprintType)
+struct FCharismaMessageHistoryResponse
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(BlueprintReadWrite)
+	TArray<FCharismaMessage> Messages;
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FTokenDelegate, FString, Token, int32, PlaythroughId, const UPlaythrough*, Playthrough);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FConversationDelegate, int32, ConversationId);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageHistoryDelegate, const FCharismaMessageHistoryResponse&, MessageHistory);
@@ -44,20 +53,6 @@ public:
 	~UPlaythrough();
 
 	//Member
-	UFUNCTION(BlueprintCallable, Category = Setup)
-	void CreateConversation(const FString& PlaythroughToken) const;
-
-	UFUNCTION(BlueprintCallable, Category = Interaction)
-	void SetMemory(const FString& PlaythroughToken, const FString& RecallValue, const FString& SaveValue) const;
-
-	UFUNCTION(BlueprintCallable, Category = Interaction)
-	void RestartFromEventId(const FString& PlaythroughToken, const int64 EventId) const;
-
-	UFUNCTION(BlueprintCallable, Category = Interaction)
-	void GetMessageHistory(const FString& PlaythroughToken, const int32 ConversationId, const int64 MinEventId) const;
-
-	UFUNCTION(BlueprintCallable, Category = Interaction)
-	void GetPlaythroughInfo(const FString& PlaythroughToken) const;
 
 	UFUNCTION(BlueprintCallable, Category = Connection)
 	void Connect(const FString& Token, const int32 PlaythroughId);
@@ -69,8 +64,7 @@ public:
 	void Action(const int32 ConversationId, const FString& ActionName) const;
 
 	UFUNCTION(BlueprintCallable, Category = Play)
-	void Start(const int32 ConversationId, const int32 SceneIndex, const int32 StartGraphId, const FString& StartGraphReferenceId,
-		const bool UseSpeech = false);
+	void Start(const int32 ConversationId, const int32 SceneIndex, const int32 StartGraphId, const FString& StartGraphReferenceId, const bool UseSpeech = false);
 
 	UFUNCTION(BlueprintCallable, Category = Play)
 	void Reply(const int32 ConversationId, const FString& Message) const;
@@ -120,9 +114,6 @@ public:
 
 	void OnTokenRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
 
-private:
-	// Member
-
 	void OnConversationRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
 
 	void OnSetMemory(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
@@ -132,6 +123,9 @@ private:
 	void OnMessageHistoryComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
 
 	void OnPlaythroughInfoComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
+
+private:
+	// Member
 
 	SpeechConfig GetSpeechConfig() const;
 

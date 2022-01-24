@@ -15,15 +15,6 @@ enum ECharismaLogSeverity
 	Error
 };
 
-USTRUCT(BlueprintType)
-struct FCharismaMessageHistoryResponse
-{
-	GENERATED_USTRUCT_BODY()
-
-	UPROPERTY(BlueprintReadWrite)
-	TArray<FCharismaMessage> Messages;
-};
-
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class CHARISMAMODULE_API UCharismaAPI : public UObject
 {
@@ -44,4 +35,20 @@ public:
 
 	UFUNCTION()
 	static FString ToQueryString(const TMap<FString, FString>& QueryParams);
+
+	UFUNCTION()
+	static void CreateConversationAPI(UPlaythrough* Playthrough, const FString& PlaythroughToken);
+
+	UFUNCTION()
+	static void SetMemoryAPI(UPlaythrough* Playthrough, const FString& Token, const FString& RecallValue, const FString& SaveValue);
+
+	UFUNCTION()
+	static void RestartFromEventIdAPI(UPlaythrough* Playthrough, const FString& TokenForRestart, const int64 EventId);
+
+	UFUNCTION()
+	static void GetMessageHistoryAPI(UPlaythrough* Playthrough, const FString& Token, const int32 ConversationId, const int64 MinEventId);
+
+	UFUNCTION()
+	static void GetPlaythroughInfoAPI(UPlaythrough* Playthrough, const FString& Token);
+
 };

@@ -29,7 +29,7 @@ void UCharismaInitialization::Activate()
 	RefPlaythrough->OnTokenFailCreation.AddDynamic(this, &UCharismaInitialization::BroadcastFailure);
 
 	UCharismaAPI::InitPlaythoughObject(InitStoryId, InitStoryVersion, InitApiKey, RefPlaythrough);
-
+	
 
 }
 

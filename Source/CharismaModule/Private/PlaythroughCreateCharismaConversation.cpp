@@ -20,7 +20,7 @@ UPlaythroughCreateCharismaConversation* UPlaythroughCreateCharismaConversation::
 
 void UPlaythroughCreateCharismaConversation::Activate()
 {
-	CurPlaythrough->CreateConversation(CurToken);
+	UCharismaAPI::CreateConversationAPI(CurPlaythrough ,CurToken);
 	CurPlaythrough->Connect(CurToken, CurPlaythroughId);
 
 	CurPlaythrough->OnConversationCreated.AddDynamic(this, &UPlaythroughCreateCharismaConversation::BroadcastOnCreated);
