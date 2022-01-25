@@ -81,6 +81,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Play)
 	void ToggleSpeechOff();
 
+	UFUNCTION()
+	void SaveEmotionsMemories(const TArray<FCharismaEmotion>& Emotions, const TArray<FCharismaMemory>& Memories);
+
 	//Events
 
 	UPROPERTY(BlueprintAssignable, Category = Events)
@@ -122,7 +125,13 @@ public:
 
 	void OnMessageHistoryComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
 
-	void OnPlaythroughInfoComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
+	void OnPlaythroughInfoComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful);
+
+	UPROPERTY(BlueprintReadWrite)
+	TArray<FCharismaEmotion> PlaythroughEmotions;
+
+	UPROPERTY(BlueprintReadWrite)
+	TArray<FCharismaMemory> PlaythroughMemories;
 
 private:
 	// Member

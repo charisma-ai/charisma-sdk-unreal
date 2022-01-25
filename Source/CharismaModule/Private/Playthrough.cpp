@@ -97,6 +97,7 @@ void UPlaythrough::OnSetMemory(FHttpRequestPtr Request, FHttpResponsePtr Respons
 		if (ResponseCode == 200)
 		{
 			UCharismaAPI::Log(0, Response.Get()->GetContentAsString(), Info);
+			//Here
 		}
 		else
 		{
@@ -158,7 +159,7 @@ void UPlaythrough::OnMessageHistoryComplete(FHttpRequestPtr Request, FHttpRespon
 	}
 }
 
-void UPlaythrough::OnPlaythroughInfoComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const
+void UPlaythrough::OnPlaythroughInfoComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful)
 {
 	if (WasSuccessful)
 	{
@@ -170,6 +171,7 @@ void UPlaythrough::OnPlaythroughInfoComplete(FHttpRequestPtr Request, FHttpRespo
 			FCharismaPlaythroughInfoResponse PlaythroughInfo;
 			if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &PlaythroughInfo, 0, 0))
 			{
+				UPlaythrough::SaveEmotionsMemories(PlaythroughInfo.Emotions, PlaythroughInfo.Memories);
 				OnPlaythroughInfo.Broadcast(PlaythroughInfo);
 			}
 			else
@@ -244,6 +246,7 @@ void UPlaythrough::Connect(const FString& Token, const int32 PlaythroughId)
 
 					UCharismaAPI::Log(-1, Event.Message.Character.Name + TEXT(": ") + Event.Message.Text, Info);
 
+					UPlaythrough::SaveEmotionsMemories(Event.Emotions, Event.Memories);
 					OnMessage.Broadcast(Event);
 				});
 
@@ -418,4 +421,10 @@ SpeechConfig UPlaythrough::GetSpeechConfig() const
 	speechConfig.encoding = "ogg";
 	speechConfig.output = "buffer";
 	return speechConfig;
+}
+
+void UPlaythrough::SaveEmotionsMemories(const TArray<FCharismaEmotion>& Emotions, const TArray<FCharismaMemory>& Memories)
+{
+	PlaythroughEmotions = Emotions;
+	PlaythroughMemories = Memories;
 }
