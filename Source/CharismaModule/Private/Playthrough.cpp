@@ -16,6 +16,11 @@ UPlaythrough::~UPlaythrough()
 	Disconnect();
 }
 
+void UPlaythrough::CreateCharismaPlaythroughObject(UPlaythrough*& Playthrough)
+{
+	Playthrough = NewObject<UPlaythrough>();
+}
+
 void UPlaythrough::OnTokenRequestComplete(const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful) const
 {
 	if (WasSuccessful)
@@ -32,7 +37,7 @@ void UPlaythrough::OnTokenRequestComplete(const FHttpRequestPtr Request, const F
 			{
 				const FString Token = ResponseData->GetStringField(TEXT("token"));
 				const int32 PlaythroughId = ResponseData->GetIntegerField(TEXT("playthroughId"));
-				OnTokenCreated.Broadcast(Token, PlaythroughId, this);
+				OnTokenCreationSuccess.Broadcast(Token, PlaythroughId, this);
 			}
 			else
 			{
@@ -44,7 +49,7 @@ void UPlaythrough::OnTokenRequestComplete(const FHttpRequestPtr Request, const F
 			const FString Token = "Null";
 			const int32 PlaythroughId = 0;
 			UPlaythrough* Playthrough = nullptr;
-			OnTokenFailCreation.Broadcast(Token, PlaythroughId, Playthrough);
+			OnTokenCreationFailure.Broadcast(Token, PlaythroughId, Playthrough);
 			TArray<FStringFormatArg> Args;
 			Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
 			Args.Add(FStringFormatArg(Content));

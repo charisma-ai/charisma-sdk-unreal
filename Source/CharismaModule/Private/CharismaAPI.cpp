@@ -28,11 +28,6 @@ FString UCharismaAPI::ToQueryString(const TMap<FString, FString>& QueryParams)
 	return Result;
 }
 
-void UCharismaAPI::CreateCharismaPlaythroughObject(UPlaythrough*& Playthrough)
-{
-	Playthrough = NewObject<UPlaythrough>();
-}
-
  void UCharismaAPI::InitPlaythoughObject(const int32 StoryId, const int32 StoryVersion, const FString& ApiKey, UPlaythrough*& Playthrough)
 {
 	TSharedPtr<FJsonObject> RequestData = MakeShareable(new FJsonObject);

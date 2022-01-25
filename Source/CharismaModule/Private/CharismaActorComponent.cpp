@@ -22,43 +22,26 @@ void UCharismaActorComponent::BeginPlay()
 	AGameModeBase* GameMode = UGameplayStatics::GetGameMode(this);
 	GameModeComponent = GameMode->FindComponentByClass<UCharismaGameModeComponent>();
 
-	Playthrough = GameModeComponent->Playthrough;
-
-	if (!Playthrough)
-	{
-		GetWorld()->GetTimerManager().SetTimer(Timer, this, &UCharismaActorComponent::BindToPlaythrough, 0.2f, false);
-	}
-	else
-	{
-		Playthrough->OnMessage.AddDynamic(this, &UCharismaActorComponent::UpdateCharacterEmotion);
-	}
+	BindToPlaythrough();
 }
 
 void UCharismaActorComponent::BindToPlaythrough()
 {
-	
-	if (!Playthrough)
+	Playthrough = GameModeComponent->Playthrough;
+	if (Playthrough)
 	{
-		Playthrough = GameModeComponent->Playthrough;
-		if (Playthrough)
-		{
-			Playthrough->OnMessage.AddDynamic(this, &UCharismaActorComponent::UpdateCharacterEmotion);
-		}
-		else
-		{
-			GetWorld()->GetTimerManager().SetTimer(Timer, this, &UCharismaActorComponent::BindToPlaythrough, 0.2f, false);
-		}
+		Playthrough->OnMessage.AddDynamic(this, &UCharismaActorComponent::UpdateCharacterEmotion);
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().SetTimer(Timer, this, &UCharismaActorComponent::BindToPlaythrough, 0.2f, false);
 	}
 }
 
 void UCharismaActorComponent::UpdateCharacterEmotion(const FCharismaMessageEvent& Message)
 {
-	 
 	if (CharacterName == Message.Message.Character.Name)
 	{
-		
 		CharacterEmotions = Message.Emotions;
-
 	}
-
 }

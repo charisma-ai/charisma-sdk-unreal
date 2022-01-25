@@ -31,9 +31,6 @@ public:
 	static void Log(const int32 Key, const FString& Message, const ECharismaLogSeverity Severity, const float Duration = 5.f);
 
 	UFUNCTION()
-	static void CreateCharismaPlaythroughObject(UPlaythrough*& Playthrough);
-
-	UFUNCTION()
 	static FString ToQueryString(const TMap<FString, FString>& QueryParams);
 
 	UFUNCTION()

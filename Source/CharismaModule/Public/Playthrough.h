@@ -54,6 +54,9 @@ public:
 
 	//Member
 
+	UFUNCTION()
+	static void CreateCharismaPlaythroughObject(UPlaythrough*& Playthrough);
+
 	UFUNCTION(BlueprintCallable, Category = Connection)
 	void Connect(const FString& Token, const int32 PlaythroughId);
 
@@ -111,9 +114,9 @@ public:
 	FTypingDelegate OnTyping;
 
 	UPROPERTY(BlueprintAssignable, Category = Events)
-	FTokenDelegate OnTokenCreated;
+	FTokenDelegate OnTokenCreationSuccess;
 	UPROPERTY(BlueprintAssignable, Category = Events)
-	FTokenDelegate OnTokenFailCreation;
+	FTokenDelegate OnTokenCreationFailure;
 
 	void OnTokenRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
 
