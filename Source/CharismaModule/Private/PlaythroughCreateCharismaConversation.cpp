@@ -22,18 +22,4 @@ void UPlaythroughCreateCharismaConversation::Activate()
 {
 	UCharismaAPI::CreateConversationAPI(CurPlaythrough ,CurToken);
 	CurPlaythrough->Connect(CurToken, CurPlaythroughId);
-
-	CurPlaythrough->OnConversationCreated.AddDynamic(this, &UPlaythroughCreateCharismaConversation::BroadcastOnCreated);
-	CurPlaythrough->OnReady.AddDynamic(this, &UPlaythroughCreateCharismaConversation::BroadcastReady);
-}
-
-
-void UPlaythroughCreateCharismaConversation::BroadcastOnCreated(const int32 ConversationId)
-{
-	CurConversationId = ConversationId;
-}
-
-void UPlaythroughCreateCharismaConversation::BroadcastReady()
-{
-	OnReady.Broadcast(CurConversationId);
 }

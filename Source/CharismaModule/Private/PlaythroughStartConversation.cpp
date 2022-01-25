@@ -27,13 +27,5 @@ UPlaythroughStartConversation* UPlaythroughStartConversation::StartConversation(
 
 void UPlaythroughStartConversation::Activate()
 {
-
 	CurPlaythrough->Start(CurConversationId, CurSceneIndex, CurStartGraphId, CurStartGraphReferenceId, CurUseSpeech);
-
-	CurPlaythrough->OnMessage.AddDynamic(this, &UPlaythroughStartConversation::BroadcastMessage);
-}
-
-void UPlaythroughStartConversation::BroadcastMessage(const FCharismaMessageEvent& MessageEvent)
-{
-	OnMessage.Broadcast(MessageEvent);
 }

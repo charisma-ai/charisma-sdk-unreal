@@ -9,7 +9,6 @@
 
 #include "PlaythroughStartConversation.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlaythroughMessagesManagerDelegate, const FCharismaMessageEvent&, MessageEvent);
 UCLASS()
 class CHARISMAMODULE_API UPlaythroughStartConversation : public UBlueprintAsyncActionBase
 {
@@ -37,12 +36,5 @@ public:
 
 private:
 
-	UFUNCTION()
-	void BroadcastMessage(const FCharismaMessageEvent& MessageEvent);
-
-	UPROPERTY(BlueprintAssignable)
-	FPlaythroughMessagesManagerDelegate OnMessage;
-
 	UObject* WorldContextObject;
-
 };
