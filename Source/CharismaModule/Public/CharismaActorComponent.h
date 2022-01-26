@@ -10,6 +10,7 @@
 #include "CharismaGameModeComponent.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/GameModeBase.h"
+#include "CharismaAudio.h"
 
 #include "CharismaActorComponent.generated.h"
 
@@ -26,6 +27,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FString CharacterName;
 	
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool PlayAudio = false;
+
 	UPROPERTY(BlueprintReadWrite)
 	TArray<FCharismaEmotion> CharacterEmotions;
 
@@ -42,7 +46,7 @@ public:
 	UCharismaGameModeComponent* GameModeComponent;
 
 	UFUNCTION()
-	void UpdateCharacterEmotion(const FCharismaMessageEvent& Message);
+	void MessageReceived(const FCharismaMessageEvent& Message);
 
 	UFUNCTION()
 	void BindToPlaythrough();

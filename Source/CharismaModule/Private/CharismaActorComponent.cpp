@@ -30,7 +30,7 @@ void UCharismaActorComponent::BindToPlaythrough()
 	Playthrough = GameModeComponent->Playthrough;
 	if (Playthrough)
 	{
-		Playthrough->OnMessage.AddDynamic(this, &UCharismaActorComponent::UpdateCharacterEmotion);
+		Playthrough->OnMessage.AddDynamic(this, &UCharismaActorComponent::MessageReceived);
 	}
 	else
 	{
@@ -38,10 +38,15 @@ void UCharismaActorComponent::BindToPlaythrough()
 	}
 }
 
-void UCharismaActorComponent::UpdateCharacterEmotion(const FCharismaMessageEvent& Message)
+void UCharismaActorComponent::MessageReceived(const FCharismaMessageEvent& Message)
 {
 	if (CharacterName == Message.Message.Character.Name)
 	{
 		CharacterEmotions = Message.Emotions;
+		
+		if (PlayAudio == true)
+		{
+			UGameplayStatics::PlaySound2D(this, UCharismaAudio::CreateSoundFromBytes(Message.Message.Speech.Audio), 1.f, 1.f, 0.f, nullptr, nullptr, true);
+		}
 	}
 }

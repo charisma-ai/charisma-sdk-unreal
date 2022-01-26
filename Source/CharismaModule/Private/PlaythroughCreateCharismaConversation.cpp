@@ -22,4 +22,4 @@ void UPlaythroughCreateCharismaConversation::Activate()
 {
 	UCharismaAPI::CreateConversationAPI(CurPlaythrough ,CurToken);
 	CurPlaythrough->Connect(CurToken, CurPlaythroughId);
-}
+}                                                             
