@@ -30,6 +30,9 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	bool PlayAudio = false;
 
+	UPROPERTY()
+	UAudioComponent* CharacterAudioComponent;
+
 	UPROPERTY(BlueprintReadWrite)
 	TArray<FCharismaEmotion> CharacterEmotions;
 

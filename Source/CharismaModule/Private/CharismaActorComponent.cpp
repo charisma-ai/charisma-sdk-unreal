@@ -19,6 +19,8 @@ void UCharismaActorComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	CharacterAudioComponent = GetOwner()->FindComponentByClass<UAudioComponent>();
+
 	AGameModeBase* GameMode = UGameplayStatics::GetGameMode(this);
 	GameModeComponent = GameMode->FindComponentByClass<UCharismaGameModeComponent>();
 
@@ -46,7 +48,10 @@ void UCharismaActorComponent::MessageReceived(const FCharismaMessageEvent& Messa
 		
 		if (PlayAudio == true)
 		{
-			UGameplayStatics::PlaySound2D(this, UCharismaAudio::CreateSoundFromBytes(Message.Message.Speech.Audio), 1.f, 1.f, 0.f, nullptr, nullptr, true);
+			if (CharacterAudioComponent) {
+				CharacterAudioComponent->SetSound(UCharismaAudio::CreateSoundFromBytes(Message.Message.Speech.Audio));
+				CharacterAudioComponent->Play();
+			}
 		}
 	}
 }
