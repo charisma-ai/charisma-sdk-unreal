@@ -23,7 +23,7 @@ void UCharismaInitialization::Activate()
 
 	UPlaythrough* RefPlaythrough;
 
-	UPlaythrough::CreateCharismaPlaythroughObject(RefPlaythrough);
+	UPlaythrough::CreateCharismaPlaythroughObject(WorldContextObject, RefPlaythrough);
 
 	RefPlaythrough->OnTokenCreationSuccess.AddDynamic(this, &UCharismaInitialization::BroadcastSuccess);
 	RefPlaythrough->OnTokenCreationFailure.AddDynamic(this, &UCharismaInitialization::BroadcastFailure);

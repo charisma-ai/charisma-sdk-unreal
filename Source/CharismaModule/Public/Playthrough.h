@@ -8,6 +8,7 @@
 #include "UObject/NoExportTypes.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Room.h"
+#include "Math/UnrealMathUtility.h"
 
 #include "Playthrough.generated.h"
 
@@ -55,7 +56,7 @@ public:
 	//Member
 
 	UFUNCTION()
-	static void CreateCharismaPlaythroughObject(UPlaythrough*& Playthrough);
+	static void CreateCharismaPlaythroughObject(UObject* WorldContextObject, UPlaythrough*& Playthrough);
 
 	UFUNCTION(BlueprintCallable, Category = Connection)
 	void Connect(const FString& Token, const int32 PlaythroughId);
@@ -86,6 +87,15 @@ public:
 
 	UFUNCTION()
 	void SaveEmotionsMemories(const TArray<FCharismaEmotion>& Emotions, const TArray<FCharismaMemory>& Memories);
+
+	UFUNCTION()
+	void ReconnectionFlow();
+
+	UFUNCTION()
+	void ReconnectionFlowCreate();
+
+	UFUNCTION()
+	void ReconnectionDelay();
 
 	//Events
 
@@ -146,6 +156,16 @@ private:
 	TSharedPtr<Client> ClientInstance;
 
 	TSharedPtr<Room<void>> RoomInstance;
+
+	FString CurToken; 
+	
+	int32 CurPlaythroughId;
+
+	UObject* CurWorldContextObject;
+
+	int TryToReconnect = 0;
+
+	bool CalledByDisconnect = false;
 
 	bool bUseSpeech = false;
 
