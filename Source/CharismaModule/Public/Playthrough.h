@@ -5,13 +5,12 @@
 #include "CharismaEvents.h"
 #include "Client.h"
 #include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
 #include "Interfaces/IHttpResponse.h"
-#include "Room.h"
 #include "Math/UnrealMathUtility.h"
+#include "Room.h"
+#include "UObject/NoExportTypes.h"
 
 #include "Playthrough.generated.h"
-
 
 USTRUCT(BlueprintType)
 struct FCharismaPlaythroughInfoResponse
@@ -34,7 +33,8 @@ struct FCharismaMessageHistoryResponse
 	TArray<FCharismaMessage> Messages;
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FTokenDelegate, FString, Token, int32, PlaythroughId, const UPlaythrough*, Playthrough);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
+	FTokenDelegate, FString, Token, int32, PlaythroughId, const UPlaythrough*, Playthrough);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FConversationDelegate, int32, ConversationId);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageHistoryDelegate, const FCharismaMessageHistoryResponse&, MessageHistory);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlaythroughInfoDelegate, const FCharismaPlaythroughInfoResponse&, PlaythroughInfo);
@@ -53,7 +53,7 @@ public:
 	UPlaythrough();
 	~UPlaythrough();
 
-	//Member
+	// Member
 
 	UFUNCTION()
 	static void CreateCharismaPlaythroughObject(UObject* WorldContextObject, UPlaythrough*& Playthrough);
@@ -68,7 +68,8 @@ public:
 	void Action(const int32 ConversationId, const FString& ActionName) const;
 
 	UFUNCTION(BlueprintCallable, Category = Play)
-	void Start(const int32 ConversationId, const int32 SceneIndex, const int32 StartGraphId, const FString& StartGraphReferenceId, const bool UseSpeech = false);
+	void Start(const int32 ConversationId, const int32 SceneIndex, const int32 StartGraphId, const FString& StartGraphReferenceId,
+		const bool UseSpeech = false);
 
 	UFUNCTION(BlueprintCallable, Category = Play)
 	void Reply(const int32 ConversationId, const FString& Message) const;
@@ -97,7 +98,7 @@ public:
 	UFUNCTION()
 	void ReconnectionDelay();
 
-	//Events
+	// Events
 
 	UPROPERTY(BlueprintAssignable, Category = Events)
 	FConversationDelegate OnConversationCreated;
@@ -122,15 +123,6 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = Events)
 	FTypingDelegate OnTyping;
-
-	UPROPERTY(BlueprintAssignable, Category = Events)
-	FTokenDelegate OnTokenCreationSuccess;
-	UPROPERTY(BlueprintAssignable, Category = Events)
-	FTokenDelegate OnTokenCreationFailure;
-
-	void OnTokenRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
-
-	void OnConversationRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
 
 	void OnSetMemory(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
 
@@ -157,8 +149,8 @@ private:
 
 	TSharedPtr<Room<void>> RoomInstance;
 
-	FString CurToken; 
-	
+	FString CurToken;
+
 	int32 CurPlaythroughId;
 
 	UObject* CurWorldContextObject;
@@ -169,5 +161,5 @@ private:
 
 	bool bUseSpeech = false;
 
-	bool bIsPlaying = false;	
+	bool bIsPlaying = false;
 };

@@ -1,6 +1,6 @@
 #include "Playthrough.h"
-#include "CharismaAPI.h"
 
+#include "CharismaAPI.h"
 #include "Json.h"
 #include "JsonUtilities.h"
 
@@ -22,77 +22,6 @@ void UPlaythrough::CreateCharismaPlaythroughObject(UObject* WorldContextObject, 
 	Playthrough->CurWorldContextObject = WorldContextObject;
 }
 
-void UPlaythrough::OnTokenRequestComplete(const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful) const
-{
-	if (WasSuccessful)
-	{
-		const int32 ResponseCode = Response->GetResponseCode();
-		const FString Content = Response->GetContentAsString();
-
-		if (ResponseCode == 200)
-		{
-			TSharedPtr<FJsonObject> ResponseData = MakeShareable(new FJsonObject);
-
-			const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Content);
-			if (FJsonSerializer::Deserialize(Reader, ResponseData))
-			{
-				const FString Token = ResponseData->GetStringField(TEXT("token"));
-				const int32 PlaythroughId = ResponseData->GetIntegerField(TEXT("playthroughId"));
-				OnTokenCreationSuccess.Broadcast(Token, PlaythroughId, this);
-			}
-			else
-			{
-				UCharismaAPI::Log(-2, "Failed to deserialize response data.", Error, 5.f);
-			}
-		}
-		else
-		{
-			const FString Token = "Null";
-			const int32 PlaythroughId = 0;
-			UPlaythrough* Playthrough = nullptr;
-			OnTokenCreationFailure.Broadcast(Token, PlaythroughId, Playthrough);
-			TArray<FStringFormatArg> Args;
-			Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
-			Args.Add(FStringFormatArg(Content));
-			UCharismaAPI::Log(-2, FString::Format(TEXT("{0}, {1}."), Args), Error, 5.f);
-		}
-	}
-}
-
-void UPlaythrough::OnConversationRequestComplete(
-	const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful) const
-{
-	if (WasSuccessful)
-	{
-		const int32 ResponseCode = Response->GetResponseCode();
-		const FString Content = Response->GetContentAsString();
-
-		if (ResponseCode == 200)
-		{
-			TSharedPtr<FJsonObject> ResponseData = MakeShareable(new FJsonObject);
-
-			const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Content);
-			if (FJsonSerializer::Deserialize(Reader, ResponseData))
-			{
-				const int32 Conversation = ResponseData->GetNumberField(TEXT("conversationId"));
-
-				OnConversationCreated.Broadcast(Conversation);
-			}
-			else
-			{
-				UCharismaAPI::Log(-1, "Failed to deserialize response data.", Error, 5.f);
-			}
-		}
-		else
-		{
-			TArray<FStringFormatArg> Args;
-			Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
-			Args.Add(FStringFormatArg(Content));
-			UCharismaAPI::Log(-1, FString::Format(TEXT("{0}, {1}."), Args), Error, 5.f);
-		}
-	}
-}
-
 void UPlaythrough::OnSetMemory(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const
 {
 	if (WasSuccessful)
@@ -103,7 +32,7 @@ void UPlaythrough::OnSetMemory(FHttpRequestPtr Request, FHttpResponsePtr Respons
 		if (ResponseCode == 200)
 		{
 			UCharismaAPI::Log(0, Response.Get()->GetContentAsString(), Info);
-			//Here
+			// Here
 		}
 		else
 		{
@@ -445,8 +374,8 @@ void UPlaythrough::ReconnectionFlow()
 	{
 		UCharismaAPI::Log(1, "Reconnecting...", Info);
 
-		   ClientInstance->Reconnect<void>(RoomInstance->Id, {{"sessionId", FStringToStdString(RoomInstance->SessionId)}},
-			[this](TSharedPtr<MatchMakeError> Error, TSharedPtr<Room<void>> Room) 
+		ClientInstance->JoinOrCreate<void>(RoomInstance->Id, {{"sessionId", FStringToStdString(RoomInstance->SessionId)}},
+			[this](TSharedPtr<MatchMakeError> Error, TSharedPtr<Room<void>> Room)
 			{
 				if (Error)
 				{
@@ -511,19 +440,16 @@ void UPlaythrough::ReconnectionFlow()
 						OnError.Broadcast(Event);
 					});
 
-				this->RoomInstance->OnLeave = ([this]() 
-				 {
-				OnConnected.Broadcast(false);
+				this->RoomInstance->OnLeave = ([this]() {
+					OnConnected.Broadcast(false);
 
-				UPlaythrough::ReconnectionFlow();
+					UPlaythrough::ReconnectionFlow();
 				});
 
 				this->RoomInstance->OnError =
 					([this](const int& Code, const FString& Error) { UCharismaAPI::Log(-1, Error, ECharismaLogSeverity::Error); });
 				return;
-			 });
-		 
-
+			});
 	}
 }
 

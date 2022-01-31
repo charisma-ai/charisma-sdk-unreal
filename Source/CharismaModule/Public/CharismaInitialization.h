@@ -10,7 +10,7 @@
 
 #include "CharismaInitialization.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FCharismaInitializationDelegate, const UPlaythrough*, Playthrough, int32, PlaythroughId, FString, Token);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FCharismaInitializationDelegate, const UPlaythrough*, Playthrough, FString, Token, FString, PlaythroughUuid);
 
 UCLASS()
 class CHARISMAMODULE_API UCharismaInitialization : public UBlueprintAsyncActionBase
@@ -32,12 +32,6 @@ public:
 
 
 private:
-
-	UFUNCTION()
-	void BroadcastSuccess(const FString Token, const int32 PlaythroughId, const UPlaythrough* Playthrough);
-
-	UFUNCTION()
-	void BroadcastFailure(const FString Token, const int32 PlaythroughId, const UPlaythrough* Playthrough);
 
 	UPROPERTY(BlueprintAssignable)
 	FCharismaInitializationDelegate Success;

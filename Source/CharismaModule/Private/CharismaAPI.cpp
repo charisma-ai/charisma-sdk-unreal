@@ -1,8 +1,8 @@
 #include "CharismaAPI.h"
-#include "Playthrough.h"
 
 #include "Json.h"
 #include "JsonUtilities.h"
+#include "Playthrough.h"
 
 #include <nlohmann/json.hpp>
 #include <sstream>
@@ -28,7 +28,37 @@ FString UCharismaAPI::ToQueryString(const TMap<FString, FString>& QueryParams)
 	return Result;
 }
 
- void UCharismaAPI::InitPlaythoughObject(const int32 StoryId, const int32 StoryVersion, const FString& ApiKey, UPlaythrough*& Playthrough)
+void UCharismaAPI::Log(const int32 Key, const FString& Message, const ECharismaLogSeverity Severity, const float Duration)
+{
+	FColor MessageColor;
+	switch (Severity)
+	{
+		case Info:
+			MessageColor = FColor::Green;
+			UE_LOG(LogTemp, Log, TEXT("Charisma: %s"), *Message);
+			break;
+		case Warning:
+			MessageColor = FColor::Orange;
+			UE_LOG(LogTemp, Warning, TEXT("Charisma: %s"), *Message);
+			break;
+		case Error:
+			MessageColor = FColor::Red;
+			UE_LOG(LogTemp, Error, TEXT("Charisma: %s"), *Message);
+			break;
+		default:
+			MessageColor = FColor::White;
+			UE_LOG(LogTemp, Log, TEXT("Charisma: %s"), *Message);
+	}
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(Key, Duration, MessageColor, FString("Charisma: " + Message));
+	}
+}
+
+void UCharismaAPI::CreatePlaythroughToken(const int32 StoryId, const int32 StoryVersion, const FString& ApiKey,
+	const TFunction<void(const FString Token, const FString PlaythroughUuid)>& SuccessCallback,
+	const TFunction<void(const FString Error)>& ErrorCallback)
 {
 	TSharedPtr<FJsonObject> RequestData = MakeShareable(new FJsonObject);
 	RequestData->SetNumberField("storyId", StoryId);
@@ -61,40 +91,58 @@ FString UCharismaAPI::ToQueryString(const TMap<FString, FString>& QueryParams)
 	HttpRequest->AppendToHeader("Content-Type", "application/json");
 	HttpRequest->SetURL(BaseURL + "/play/token");
 	HttpRequest->SetContentAsString(OutputString);
-	HttpRequest->OnProcessRequestComplete().BindUObject(Playthrough, &UPlaythrough::OnTokenRequestComplete);
+
+	HttpRequest->OnProcessRequestComplete().BindLambda(
+		[SuccessCallback, ErrorCallback](const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful)
+		{
+			if (!WasSuccessful)
+			{
+				ErrorCallback(TEXT("`/play/token`: Error! HTTP request was not successful."));
+				return;
+			}
+
+			const int32 ResponseCode = Response->GetResponseCode();
+			const FString Content = Response->GetContentAsString();
+
+			if (ResponseCode != 200)
+			{
+				TArray<FStringFormatArg> Args;
+				Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
+				Args.Add(FStringFormatArg(Content));
+				FString ErrorMessage = FString::Format(TEXT("`/play/token`: Error! (Response code: {0}): {1}"), Args);
+
+				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+				ErrorCallback(ErrorMessage);
+
+				return;
+			}
+
+			TSharedPtr<FJsonObject> ResponseData = MakeShareable(new FJsonObject);
+
+			const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Content);
+			if (!FJsonSerializer::Deserialize(Reader, ResponseData))
+			{
+				TArray<FStringFormatArg> Args;
+				Args.Add(FStringFormatArg(Content));
+				FString ErrorMessage =
+					FString::Format(TEXT("`/play/token`: Error! Failed to deserialize response data: {0}"), Args);
+
+				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+				ErrorCallback(ErrorMessage);
+				return;
+			}
+
+			const FString Token = ResponseData->GetStringField(TEXT("token"));
+			const FString PlaythroughUuid = ResponseData->GetStringField(TEXT("playthroughUuid"));
+			SuccessCallback(Token, PlaythroughUuid);
+		});
 
 	HttpRequest->ProcessRequest();
 }
 
-void UCharismaAPI::Log(const int32 Key, const FString& Message, const ECharismaLogSeverity Severity, const float Duration)
-{
-	FColor MessageColor;
-	switch (Severity)
-	{
-		case Info:
-			MessageColor = FColor::Green;
-			UE_LOG(LogTemp, Log, TEXT("Charisma: %s"), *Message);
-			break;
-		case Warning:
-			MessageColor = FColor::Orange;
-			UE_LOG(LogTemp, Warning, TEXT("Charisma: %s"), *Message);
-			break;
-		case Error:
-			MessageColor = FColor::Red;
-			UE_LOG(LogTemp, Error, TEXT("Charisma: %s"), *Message);
-			break;
-		default:
-			MessageColor = FColor::White;
-			UE_LOG(LogTemp, Log, TEXT("Charisma: %s"), *Message);
-	}
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(Key, Duration, MessageColor, FString("Charisma: " + Message));
-	}
-}
-
-void UCharismaAPI::CreateConversationAPI(UPlaythrough* Playthrough, const FString& Token)
+void UCharismaAPI::CreateConversation(const FString& Token,
+	const TFunction<void(const FString Token, const FString ConversationUuid)>& SuccessCallback,
+	const TFunction<void(const FString Error)>& ErrorCallback)
 {
 	FHttpModule* HttpModule = &FHttpModule::Get();
 	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = HttpModule->CreateRequest();
@@ -102,12 +150,56 @@ void UCharismaAPI::CreateConversationAPI(UPlaythrough* Playthrough, const FStrin
 	HttpRequest->SetVerb("POST");
 	HttpRequest->SetHeader("Authorization", "Bearer " + Token);
 	HttpRequest->SetURL(UCharismaAPI::BaseURL + "/play/conversation");
-	HttpRequest->OnProcessRequestComplete().BindUObject(Playthrough, &UPlaythrough::OnConversationRequestComplete);
+
+	HttpRequest->OnProcessRequestComplete().BindLambda(
+		[SuccessCallback, ErrorCallback](const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful)
+		{
+			if (!WasSuccessful)
+			{
+				ErrorCallback(TEXT("`/play/conversation`: Error! HTTP request was not successful."));
+				return;
+			}
+
+			const int32 ResponseCode = Response->GetResponseCode();
+			const FString Content = Response->GetContentAsString();
+
+			if (ResponseCode != 200)
+			{
+				TArray<FStringFormatArg> Args;
+				Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
+				Args.Add(FStringFormatArg(Content));
+				FString ErrorMessage = FString::Format(TEXT("`/play/conversation`: Error! (Response code: {0}): {1}"), Args);
+
+				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+				ErrorCallback(ErrorMessage);
+
+				return;
+			}
+
+			TSharedPtr<FJsonObject> ResponseData = MakeShareable(new FJsonObject);
+
+			const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Content);
+			if (!FJsonSerializer::Deserialize(Reader, ResponseData))
+			{
+				TArray<FStringFormatArg> Args;
+				Args.Add(FStringFormatArg(Content));
+				FString ErrorMessage =
+					FString::Format(TEXT("`/play/conversation`: Error! Failed to deserialize response data: {0}"), Args);
+
+				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+				ErrorCallback(ErrorMessage);
+				return;
+			}
+
+			const FString ConversationUuid = ResponseData->GetNumberField(TEXT("conversationUuid"));
+			SuccessCallback(ConversationUuid);
+		});
 
 	HttpRequest->ProcessRequest();
 }
 
-void UCharismaAPI::SetMemoryAPI(UPlaythrough* Playthrough, const FString& Token, const FString& RecallValue, const FString& SaveValue)
+void UCharismaAPI::SetMemoryAPI(
+	UPlaythrough* Playthrough, const FString& Token, const FString& RecallValue, const FString& SaveValue)
 {
 	TSharedPtr<FJsonObject> RequestData = MakeShareable(new FJsonObject);
 	RequestData->SetStringField("memoryRecallValue", RecallValue);
@@ -130,30 +222,31 @@ void UCharismaAPI::SetMemoryAPI(UPlaythrough* Playthrough, const FString& Token,
 	HttpRequest->ProcessRequest();
 }
 
- void UCharismaAPI::RestartFromEventIdAPI(UPlaythrough* Playthrough, const FString& TokenForRestart, const int64 EventId)
+void UCharismaAPI::RestartFromEventIdAPI(UPlaythrough* Playthrough, const FString& TokenForRestart, const int64 EventId)
 {
-	 TSharedPtr<FJsonObject> RequestData = MakeShareable(new FJsonObject);
-	 RequestData->SetStringField("eventId", FString::Printf(TEXT("%lld"), EventId));
+	TSharedPtr<FJsonObject> RequestData = MakeShareable(new FJsonObject);
+	RequestData->SetStringField("eventId", FString::Printf(TEXT("%lld"), EventId));
 
-	 FString OutputString;
-	 const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
-	 FJsonSerializer::Serialize(RequestData.ToSharedRef(), Writer);
+	FString OutputString;
+	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
+	FJsonSerializer::Serialize(RequestData.ToSharedRef(), Writer);
 
-	 FHttpModule* HttpModule = &FHttpModule::Get();
-	 TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = HttpModule->CreateRequest();
+	FHttpModule* HttpModule = &FHttpModule::Get();
+	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = HttpModule->CreateRequest();
 
-	 HttpRequest->SetVerb("POST");
-	 HttpRequest->SetHeader("Authorization", "Bearer " + TokenForRestart);
-	 HttpRequest->AppendToHeader("Content-Type", "application/json");
-	 HttpRequest->SetURL(UCharismaAPI::BaseURL + "/play/restart-from-event");
-	 HttpRequest->SetContentAsString(OutputString);
-	 HttpRequest->OnProcessRequestComplete().BindUObject(Playthrough, &UPlaythrough::OnRestartRequestComplete);
+	HttpRequest->SetVerb("POST");
+	HttpRequest->SetHeader("Authorization", "Bearer " + TokenForRestart);
+	HttpRequest->AppendToHeader("Content-Type", "application/json");
+	HttpRequest->SetURL(UCharismaAPI::BaseURL + "/play/restart-from-event");
+	HttpRequest->SetContentAsString(OutputString);
+	HttpRequest->OnProcessRequestComplete().BindUObject(Playthrough, &UPlaythrough::OnRestartRequestComplete);
 
-	 HttpRequest->ProcessRequest();
- }
+	HttpRequest->ProcessRequest();
+}
 
-void UCharismaAPI::GetMessageHistoryAPI(UPlaythrough* Playthrough, const FString& Token, const int32 ConversationId, const int64 MinEventId)
- {
+void UCharismaAPI::GetMessageHistoryAPI(
+	UPlaythrough* Playthrough, const FString& Token, const int32 ConversationId, const int64 MinEventId)
+{
 	FHttpModule* HttpModule = &FHttpModule::Get();
 	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = HttpModule->CreateRequest();
 

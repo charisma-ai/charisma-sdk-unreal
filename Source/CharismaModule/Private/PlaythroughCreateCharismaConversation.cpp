@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "PlaythroughCreateCharismaConversation.h"
 
 UPlaythroughCreateCharismaConversation::UPlaythroughCreateCharismaConversation(const FObjectInitializer& ObjectInitializer)
@@ -8,7 +7,8 @@ UPlaythroughCreateCharismaConversation::UPlaythroughCreateCharismaConversation(c
 {
 }
 
-UPlaythroughCreateCharismaConversation* UPlaythroughCreateCharismaConversation::CreateCharismaConversation(UObject* WorldContextObject, UPlaythrough* Playthrough, const FString Token, const int32 PlaythroughId)
+UPlaythroughCreateCharismaConversation* UPlaythroughCreateCharismaConversation::CreateCharismaConversation(
+	UObject* WorldContextObject, UPlaythrough* Playthrough, const FString Token, const int32 PlaythroughId)
 {
 	UPlaythroughCreateCharismaConversation* BlueprintNode = NewObject<UPlaythroughCreateCharismaConversation>();
 	BlueprintNode->WorldContextObject = WorldContextObject;
@@ -20,6 +20,6 @@ UPlaythroughCreateCharismaConversation* UPlaythroughCreateCharismaConversation::
 
 void UPlaythroughCreateCharismaConversation::Activate()
 {
-	UCharismaAPI::CreateConversationAPI(CurPlaythrough ,CurToken);
+	UCharismaAPI::CreateConversation(CurPlaythrough, CurToken);
 	CurPlaythrough->Connect(CurToken, CurPlaythroughId);
-}                                                             
+}
