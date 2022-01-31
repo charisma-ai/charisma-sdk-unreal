@@ -10,7 +10,7 @@
 	"DocsURL": "https://charisma.ai/docs",
 	"MarketplaceURL": "",
 	"SupportURL": "https://charisma.ai/docs/troubleshooting#get-help",
-	"CanContainContent": false,
+	"CanContainContent": true,
 	"IsBetaVersion": true,
 	"IsExperimentalVersion": false,
 	"Modules": [
