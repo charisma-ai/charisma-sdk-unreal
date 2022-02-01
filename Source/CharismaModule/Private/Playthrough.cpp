@@ -16,129 +16,27 @@ UPlaythrough::~UPlaythrough()
 	Disconnect();
 }
 
-void UPlaythrough::CreateCharismaPlaythroughObject(UObject* WorldContextObject, UPlaythrough*& Playthrough)
+UPlaythrough* UPlaythrough::NewPlaythroughObject(UObject* WorldContextObject, const FString& Token, const FString& PlaythroughUuid)
 {
-	Playthrough = NewObject<UPlaythrough>();
+	UPlaythrough* Playthrough = NewObject<UPlaythrough>(WorldContextObject);
 	Playthrough->CurWorldContextObject = WorldContextObject;
+	Playthrough->CurToken = Token;
+	Playthrough->CurPlaythroughUuid = PlaythroughUuid;
+	return Playthrough;
 }
 
-void UPlaythrough::OnSetMemory(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const
-{
-	if (WasSuccessful)
-	{
-		const int32 ResponseCode = Response->GetResponseCode();
-		const FString Content = Response->GetContentAsString();
-
-		if (ResponseCode == 200)
-		{
-			UCharismaAPI::Log(0, Response.Get()->GetContentAsString(), Info);
-			// Here
-		}
-		else
-		{
-			TArray<FStringFormatArg> Args;
-			Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
-			Args.Add(FStringFormatArg(Content));
-			UCharismaAPI::Log(0, FString::Format(TEXT("{0}, {1}."), Args), Error, 5.f);
-		}
-	}
-}
-
-void UPlaythrough::OnRestartRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const
-{
-	if (WasSuccessful)
-	{
-		const int32 ResponseCode = Response->GetResponseCode();
-		const FString Content = Response->GetContentAsString();
-
-		if (ResponseCode == 200)
-		{
-			UCharismaAPI::Log(-1, "Restarted from chosen event", Info);
-		}
-		else
-		{
-			TArray<FStringFormatArg> Args;
-			Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
-			Args.Add(FStringFormatArg(Content));
-			UCharismaAPI::Log(-1, FString::Format(TEXT("{0}, {1}."), Args), Error, 5.f);
-		}
-	}
-}
-
-void UPlaythrough::OnMessageHistoryComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const
-{
-	if (WasSuccessful)
-	{
-		const int32 ResponseCode = Response->GetResponseCode();
-		const FString Content = Response->GetContentAsString();
-
-		if (ResponseCode == 200)
-		{
-			FCharismaMessageHistoryResponse MessageHistory;
-			if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &MessageHistory, 0, 0))
-			{
-				OnMessageHistory.Broadcast(MessageHistory);
-			}
-			else
-			{
-				UCharismaAPI::Log(-1, "Failed to deserialize message history response data.", Error, 5.f);
-			}
-		}
-		else
-		{
-			TArray<FStringFormatArg> Args;
-			Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
-			Args.Add(FStringFormatArg(Content));
-			UCharismaAPI::Log(-1, FString::Format(TEXT("{0}, {1}."), Args), Error, 5.f);
-		}
-	}
-}
-
-void UPlaythrough::OnPlaythroughInfoComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful)
-{
-	if (WasSuccessful)
-	{
-		const int32 ResponseCode = Response->GetResponseCode();
-		const FString Content = Response->GetContentAsString();
-
-		if (ResponseCode == 200)
-		{
-			FCharismaPlaythroughInfoResponse PlaythroughInfo;
-			if (FJsonObjectConverter::JsonObjectStringToUStruct(Content, &PlaythroughInfo, 0, 0))
-			{
-				UPlaythrough::SaveEmotionsMemories(PlaythroughInfo.Emotions, PlaythroughInfo.Memories);
-				OnPlaythroughInfo.Broadcast(PlaythroughInfo);
-			}
-			else
-			{
-				UCharismaAPI::Log(-1, "Failed to deserialize playthrough info response data.", Error, 5.f);
-			}
-		}
-		else
-		{
-			TArray<FStringFormatArg> Args;
-			Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
-			Args.Add(FStringFormatArg(Content));
-			UCharismaAPI::Log(-1, FString::Format(TEXT("{0}, {1}."), Args), Error, 5.f);
-		}
-	}
-}
-
-void UPlaythrough::Connect(const FString& Token, const int32 PlaythroughId)
+void UPlaythrough::Connect()
 {
 	if (bIsPlaying)
 	{
 		return;
 	}
 
-	CurToken = Token;
-	CurPlaythroughId = PlaythroughId;
-
 	ClientInstance = MakeShared<Client>(UCharismaAPI::SocketURL);
 	UCharismaAPI::Log(1, "Connecting...", Info);
-	ClientInstance->JoinOrCreate<void>("chat", {{"token", FStringToStdString(CurToken)}, {"playthroughId", CurPlaythroughId}},
-		[this](TSharedPtr<MatchMakeError> Error, TSharedPtr<Room<void>> Room)
-		{
+	ClientInstance->JoinOrCreate<void>("chat",
+		{{"token", FStringToStdString(CurToken)}, {"playthroughId", FStringToStdString(CurPlaythroughUuid)}},
+		[this](TSharedPtr<MatchMakeError> Error, TSharedPtr<Room<void>> Room) {
 			if (Error)
 			{
 				UPlaythrough::ReconnectionFlowCreate();
@@ -155,52 +53,48 @@ void UPlaythrough::Connect(const FString& Token, const int32 PlaythroughId)
 			this->RoomInstance->OnMessage(
 				"status", [](const msgpack::object& message) { UCharismaAPI::Log(-1, TEXT("Ready to begin playing."), Info); });
 
-			this->RoomInstance->OnMessage("message",
-				[this](const msgpack::object& message)
+			this->RoomInstance->OnMessage("message", [this](const msgpack::object& message) {
+				FCharismaMessageEvent Event = message.as<FCharismaMessageEvent>();
+
+				if (Event.Message.Character_Optional.IsSet())
 				{
-					FCharismaMessageEvent Event = message.as<FCharismaMessageEvent>();
+					Event.Message.Character = Event.Message.Character_Optional.GetValue();
+				}
 
-					if (Event.Message.Character_Optional.IsSet())
+				if (Event.Message.Speech_Optional.IsSet())
+				{
+					Event.Message.Speech = Event.Message.Speech_Optional.GetValue();
+				}
+
+				for (FCharismaMemory& Memory : Event.Memories)
+				{
+					if (Memory.SaveValue_Optional.IsSet())
 					{
-						Event.Message.Character = Event.Message.Character_Optional.GetValue();
+						Memory.SaveValue = Memory.SaveValue_Optional.GetValue();
 					}
+				}
 
-					if (Event.Message.Speech_Optional.IsSet())
-					{
-						Event.Message.Speech = Event.Message.Speech_Optional.GetValue();
-					}
+				if (Event.EndStory)
+				{
+					this->bIsPlaying = false;
+				}
 
-					for (FCharismaMemory& Memory : Event.Memories)
-					{
-						if (Memory.SaveValue_Optional.IsSet())
-						{
-							Memory.SaveValue = Memory.SaveValue_Optional.GetValue();
-						}
-					}
+				UCharismaAPI::Log(-1, Event.Message.Character.Name + TEXT(": ") + Event.Message.Text, Info);
 
-					if (Event.EndStory)
-					{
-						this->bIsPlaying = false;
-					}
-
-					UCharismaAPI::Log(-1, Event.Message.Character.Name + TEXT(": ") + Event.Message.Text, Info);
-
-					UPlaythrough::SaveEmotionsMemories(Event.Emotions, Event.Memories);
-					OnMessage.Broadcast(Event);
-				});
+				UPlaythrough::SaveEmotionsMemories(Event.Emotions, Event.Memories);
+				OnMessage.Broadcast(Event);
+			});
 
 			this->RoomInstance->OnMessage("start-typing", [this](const msgpack::object& message) { OnTyping.Broadcast(true); });
 			this->RoomInstance->OnMessage("stop-typing", [this](const msgpack::object& message) { OnTyping.Broadcast(false); });
 
-			this->RoomInstance->OnMessage("problem",
-				[this](const msgpack::object& message)
-				{
-					FCharismaErrorEvent Event = message.as<FCharismaErrorEvent>();
+			this->RoomInstance->OnMessage("problem", [this](const msgpack::object& message) {
+				FCharismaErrorEvent Event = message.as<FCharismaErrorEvent>();
 
-					UCharismaAPI::Log(-1, Event.Error, ECharismaLogSeverity::Error);
+				UCharismaAPI::Log(-1, Event.Error, ECharismaLogSeverity::Error);
 
-					OnError.Broadcast(Event);
-				});
+				OnError.Broadcast(Event);
+			});
 
 			this->RoomInstance->OnLeave = ([this]() {
 				OnConnected.Broadcast(false);
@@ -215,7 +109,7 @@ void UPlaythrough::Connect(const FString& Token, const int32 PlaythroughId)
 void UPlaythrough::Disconnect()
 {
 	bIsPlaying = false;
-	CalledByDisconnect = true;
+	bCalledByDisconnect = true;
 
 	if (RoomInstance.IsValid())
 	{
@@ -228,7 +122,7 @@ void UPlaythrough::Disconnect()
 	}
 }
 
-void UPlaythrough::Action(const int32 ConversationId, const FString& ActionName) const
+void UPlaythrough::Action(const FString& ConversationUuid, const FString& ActionName) const
 {
 	if (!RoomInstance)
 	{
@@ -237,7 +131,7 @@ void UPlaythrough::Action(const int32 ConversationId, const FString& ActionName)
 	}
 
 	ActionPayload payload;
-	payload.conversationId = ConversationId;
+	payload.conversationUuid = FStringToStdString(ConversationUuid);
 	payload.action = FStringToStdString(ActionName);
 
 	if (bUseSpeech)
@@ -248,7 +142,7 @@ void UPlaythrough::Action(const int32 ConversationId, const FString& ActionName)
 	RoomInstance->Send("action", payload);
 }
 
-void UPlaythrough::Start(const int32 ConversationId, const int32 SceneIndex, const int32 StartGraphId,
+void UPlaythrough::Start(const FString& ConversationUuid, const int32 SceneIndex, const int32 StartGraphId,
 	const FString& StartGraphReferenceId, const bool UseSpeech)
 {
 	if (!RoomInstance)
@@ -261,7 +155,7 @@ void UPlaythrough::Start(const int32 ConversationId, const int32 SceneIndex, con
 	bUseSpeech = UseSpeech;
 
 	StartPayload payload;
-	payload.conversationId = ConversationId;
+	payload.conversationUuid = FStringToStdString(ConversationUuid);
 
 	if (SceneIndex)
 	{
@@ -286,7 +180,7 @@ void UPlaythrough::Start(const int32 ConversationId, const int32 SceneIndex, con
 	RoomInstance->Send("start", payload);
 }
 
-void UPlaythrough::Tap(const int32 ConversationId) const
+void UPlaythrough::Tap(const FString& ConversationUuid) const
 {
 	if (!RoomInstance)
 	{
@@ -295,7 +189,7 @@ void UPlaythrough::Tap(const int32 ConversationId) const
 	}
 
 	TapPayload payload;
-	payload.conversationId = ConversationId;
+	payload.conversationUuid = FStringToStdString(ConversationUuid);
 
 	if (bUseSpeech)
 	{
@@ -305,7 +199,7 @@ void UPlaythrough::Tap(const int32 ConversationId) const
 	RoomInstance->Send("tap", payload);
 }
 
-void UPlaythrough::Reply(const int32 ConversationId, const FString& Message) const
+void UPlaythrough::Reply(const FString& ConversationUuid, const FString& Message) const
 {
 	if (!RoomInstance)
 	{
@@ -314,7 +208,7 @@ void UPlaythrough::Reply(const int32 ConversationId, const FString& Message) con
 	}
 
 	ReplyPayload payload;
-	payload.conversationId = ConversationId;
+	payload.conversationUuid = FStringToStdString(ConversationUuid);
 	payload.text = FStringToStdString(Message);
 
 	if (bUseSpeech)
@@ -325,7 +219,7 @@ void UPlaythrough::Reply(const int32 ConversationId, const FString& Message) con
 	RoomInstance->Send("reply", payload);
 }
 
-void UPlaythrough::Resume(const int32 ConversationId) const
+void UPlaythrough::Resume(const FString& ConversationUuid) const
 {
 	if (!RoomInstance)
 	{
@@ -334,7 +228,7 @@ void UPlaythrough::Resume(const int32 ConversationId) const
 	}
 
 	ResumePayload payload;
-	payload.conversationId = ConversationId;
+	payload.conversationUuid = FStringToStdString(ConversationUuid);
 
 	if (bUseSpeech)
 	{
@@ -370,106 +264,20 @@ void UPlaythrough::SaveEmotionsMemories(const TArray<FCharismaEmotion>& Emotions
 
 void UPlaythrough::ReconnectionFlow()
 {
-	if (CalledByDisconnect != true)
+	if (bCalledByDisconnect)
 	{
-		UCharismaAPI::Log(1, "Reconnecting...", Info);
-
-		ClientInstance->JoinOrCreate<void>(RoomInstance->Id, {{"sessionId", FStringToStdString(RoomInstance->SessionId)}},
-			[this](TSharedPtr<MatchMakeError> Error, TSharedPtr<Room<void>> Room)
-			{
-				if (Error)
-				{
-					UPlaythrough::ReconnectionFlowCreate();
-					return;
-				}
-
-				this->RoomInstance = Room;
-
-				UCharismaAPI::Log(1, "Connected.", Info);
-
-				OnConnected.Broadcast(true);
-				OnReady.Broadcast();
-
-				this->RoomInstance->OnMessage(
-					"status", [](const msgpack::object& message) { UCharismaAPI::Log(-1, TEXT("Ready to begin playing."), Info); });
-
-				this->RoomInstance->OnMessage("message",
-					[this](const msgpack::object& message)
-					{
-						FCharismaMessageEvent Event = message.as<FCharismaMessageEvent>();
-
-						if (Event.Message.Character_Optional.IsSet())
-						{
-							Event.Message.Character = Event.Message.Character_Optional.GetValue();
-						}
-
-						if (Event.Message.Speech_Optional.IsSet())
-						{
-							Event.Message.Speech = Event.Message.Speech_Optional.GetValue();
-						}
-
-						for (FCharismaMemory& Memory : Event.Memories)
-						{
-							if (Memory.SaveValue_Optional.IsSet())
-							{
-								Memory.SaveValue = Memory.SaveValue_Optional.GetValue();
-							}
-						}
-
-						if (Event.EndStory)
-						{
-							this->bIsPlaying = false;
-						}
-
-						UCharismaAPI::Log(-1, Event.Message.Character.Name + TEXT(": ") + Event.Message.Text, Info);
-
-						UPlaythrough::SaveEmotionsMemories(Event.Emotions, Event.Memories);
-						OnMessage.Broadcast(Event);
-					});
-
-				this->RoomInstance->OnMessage("start-typing", [this](const msgpack::object& message) { OnTyping.Broadcast(true); });
-				this->RoomInstance->OnMessage("stop-typing", [this](const msgpack::object& message) { OnTyping.Broadcast(false); });
-
-				this->RoomInstance->OnMessage("problem",
-					[this](const msgpack::object& message)
-					{
-						FCharismaErrorEvent Event = message.as<FCharismaErrorEvent>();
-
-						UCharismaAPI::Log(-1, Event.Error, ECharismaLogSeverity::Error);
-
-						OnError.Broadcast(Event);
-					});
-
-				this->RoomInstance->OnLeave = ([this]() {
-					OnConnected.Broadcast(false);
-
-					UPlaythrough::ReconnectionFlow();
-				});
-
-				this->RoomInstance->OnError =
-					([this](const int& Code, const FString& Error) { UCharismaAPI::Log(-1, Error, ECharismaLogSeverity::Error); });
-				return;
-			});
+		return;
 	}
-}
 
-void UPlaythrough::ReconnectionFlowCreate()
-{
-	ClientInstance->JoinOrCreate<void>("chat", {{"token", FStringToStdString(CurToken)}, {"playthroughId", CurPlaythroughId}},
-		[this](TSharedPtr<MatchMakeError> Error, TSharedPtr<Room<void>> Room)
-		{
+	UCharismaAPI::Log(1, "Reconnecting...", Info);
+
+	ClientInstance->JoinOrCreate<void>(RoomInstance->Id, {{"sessionId", FStringToStdString(RoomInstance->SessionId)}},
+		[this](TSharedPtr<MatchMakeError> Error, TSharedPtr<Room<void>> Room) {
 			if (Error)
 			{
-				TryToReconnect++;
-
-				if (TryToReconnect <= 20)
-				{
-					UPlaythrough::ReconnectionDelay();
-				}
+				UPlaythrough::ReconnectionFlowCreate();
 				return;
 			}
-
-			TryToReconnect = 0;
 
 			this->RoomInstance = Room;
 
@@ -481,52 +289,131 @@ void UPlaythrough::ReconnectionFlowCreate()
 			this->RoomInstance->OnMessage(
 				"status", [](const msgpack::object& message) { UCharismaAPI::Log(-1, TEXT("Ready to begin playing."), Info); });
 
-			this->RoomInstance->OnMessage("message",
-				[this](const msgpack::object& message)
+			this->RoomInstance->OnMessage("message", [this](const msgpack::object& message) {
+				FCharismaMessageEvent Event = message.as<FCharismaMessageEvent>();
+
+				if (Event.Message.Character_Optional.IsSet())
 				{
-					FCharismaMessageEvent Event = message.as<FCharismaMessageEvent>();
+					Event.Message.Character = Event.Message.Character_Optional.GetValue();
+				}
 
-					if (Event.Message.Character_Optional.IsSet())
+				if (Event.Message.Speech_Optional.IsSet())
+				{
+					Event.Message.Speech = Event.Message.Speech_Optional.GetValue();
+				}
+
+				for (FCharismaMemory& Memory : Event.Memories)
+				{
+					if (Memory.SaveValue_Optional.IsSet())
 					{
-						Event.Message.Character = Event.Message.Character_Optional.GetValue();
+						Memory.SaveValue = Memory.SaveValue_Optional.GetValue();
 					}
+				}
 
-					if (Event.Message.Speech_Optional.IsSet())
-					{
-						Event.Message.Speech = Event.Message.Speech_Optional.GetValue();
-					}
+				if (Event.EndStory)
+				{
+					this->bIsPlaying = false;
+				}
 
-					for (FCharismaMemory& Memory : Event.Memories)
-					{
-						if (Memory.SaveValue_Optional.IsSet())
-						{
-							Memory.SaveValue = Memory.SaveValue_Optional.GetValue();
-						}
-					}
+				UCharismaAPI::Log(-1, Event.Message.Character.Name + TEXT(": ") + Event.Message.Text, Info);
 
-					if (Event.EndStory)
-					{
-						this->bIsPlaying = false;
-					}
-
-					UCharismaAPI::Log(-1, Event.Message.Character.Name + TEXT(": ") + Event.Message.Text, Info);
-
-					UPlaythrough::SaveEmotionsMemories(Event.Emotions, Event.Memories);
-					OnMessage.Broadcast(Event);
-				});
+				UPlaythrough::SaveEmotionsMemories(Event.Emotions, Event.Memories);
+				OnMessage.Broadcast(Event);
+			});
 
 			this->RoomInstance->OnMessage("start-typing", [this](const msgpack::object& message) { OnTyping.Broadcast(true); });
 			this->RoomInstance->OnMessage("stop-typing", [this](const msgpack::object& message) { OnTyping.Broadcast(false); });
 
-			this->RoomInstance->OnMessage("problem",
-				[this](const msgpack::object& message)
+			this->RoomInstance->OnMessage("problem", [this](const msgpack::object& message) {
+				FCharismaErrorEvent Event = message.as<FCharismaErrorEvent>();
+
+				UCharismaAPI::Log(-1, Event.Error, ECharismaLogSeverity::Error);
+
+				OnError.Broadcast(Event);
+			});
+
+			this->RoomInstance->OnLeave = ([this]() {
+				OnConnected.Broadcast(false);
+
+				UPlaythrough::ReconnectionFlow();
+			});
+
+			this->RoomInstance->OnError =
+				([this](const int& Code, const FString& Error) { UCharismaAPI::Log(-1, Error, ECharismaLogSeverity::Error); });
+			return;
+		});
+}
+
+void UPlaythrough::ReconnectionFlowCreate()
+{
+	ClientInstance->JoinOrCreate<void>("chat",
+		{{"token", FStringToStdString(CurToken)}, {"playthroughId", FStringToStdString(CurPlaythroughUuid)}},
+		[this](TSharedPtr<MatchMakeError> Error, TSharedPtr<Room<void>> Room) {
+			if (Error)
+			{
+				ReconnectionTryCount++;
+
+				if (ReconnectionTryCount <= 20)
 				{
-					FCharismaErrorEvent Event = message.as<FCharismaErrorEvent>();
+					UPlaythrough::ReconnectionDelay();
+				}
+				return;
+			}
 
-					UCharismaAPI::Log(-1, Event.Error, ECharismaLogSeverity::Error);
+			ReconnectionTryCount = 0;
 
-					OnError.Broadcast(Event);
-				});
+			this->RoomInstance = Room;
+
+			UCharismaAPI::Log(1, "Connected.", Info);
+
+			OnConnected.Broadcast(true);
+			OnReady.Broadcast();
+
+			this->RoomInstance->OnMessage(
+				"status", [](const msgpack::object& message) { UCharismaAPI::Log(-1, TEXT("Ready to begin playing."), Info); });
+
+			this->RoomInstance->OnMessage("message", [this](const msgpack::object& message) {
+				FCharismaMessageEvent Event = message.as<FCharismaMessageEvent>();
+
+				if (Event.Message.Character_Optional.IsSet())
+				{
+					Event.Message.Character = Event.Message.Character_Optional.GetValue();
+				}
+
+				if (Event.Message.Speech_Optional.IsSet())
+				{
+					Event.Message.Speech = Event.Message.Speech_Optional.GetValue();
+				}
+
+				for (FCharismaMemory& Memory : Event.Memories)
+				{
+					if (Memory.SaveValue_Optional.IsSet())
+					{
+						Memory.SaveValue = Memory.SaveValue_Optional.GetValue();
+					}
+				}
+
+				if (Event.EndStory)
+				{
+					this->bIsPlaying = false;
+				}
+
+				UCharismaAPI::Log(-1, Event.Message.Character.Name + TEXT(": ") + Event.Message.Text, Info);
+
+				UPlaythrough::SaveEmotionsMemories(Event.Emotions, Event.Memories);
+				OnMessage.Broadcast(Event);
+			});
+
+			this->RoomInstance->OnMessage("start-typing", [this](const msgpack::object& message) { OnTyping.Broadcast(true); });
+			this->RoomInstance->OnMessage("stop-typing", [this](const msgpack::object& message) { OnTyping.Broadcast(false); });
+
+			this->RoomInstance->OnMessage("problem", [this](const msgpack::object& message) {
+				FCharismaErrorEvent Event = message.as<FCharismaErrorEvent>();
+
+				UCharismaAPI::Log(-1, Event.Error, ECharismaLogSeverity::Error);
+
+				OnError.Broadcast(Event);
+			});
 
 			this->RoomInstance->OnLeave = ([this]() {
 				OnConnected.Broadcast(false);

@@ -1,17 +1,13 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
-
 #include "Playthrough.h"
 
 #include "PlaythroughEventsManager.generated.h"
 
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FPEMDelegate, int32, ConversationId, bool, IsConnected, bool, IsTyping, const FCharismaMessageEvent&, MessageEvent);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FPlaythroughEventsManagerDelegate, int32, ConversationId, bool, IsConnected, bool,
+	IsTyping, const FCharismaMessageEvent&, MessageEvent);
 
 UCLASS()
 class CHARISMAMODULE_API UPlaythroughEventsManager : public UBlueprintAsyncActionBase
@@ -20,8 +16,8 @@ class CHARISMAMODULE_API UPlaythroughEventsManager : public UBlueprintAsyncActio
 
 public:
 	UFUNCTION(BlueprintCallable, meta = (BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject"), Category = "")
-	static UPlaythroughEventsManager* AttachPlaythroughHandlers(
-		UObject* WorldContextObject, UPlaythrough* Playthrough);
+	static UPlaythroughEventsManager* AttachPlaythroughHandlers(UObject* WorldContextObject, UPlaythrough* Playthrough);
+
 	virtual void Activate() override;
 
 	UPROPERTY()
@@ -36,20 +32,15 @@ public:
 	FCharismaMessageEvent CurMessageEvent;
 
 private:
+	UPROPERTY(BlueprintAssignable, Category = Events)
+	FPlaythroughEventsManagerDelegate OnConnected;
+	UPROPERTY(BlueprintAssignable, Category = Events)
+	FPlaythroughEventsManagerDelegate OnReady;
+	UPROPERTY(BlueprintAssignable, Category = Events)
+	FPlaythroughEventsManagerDelegate OnTyping;
+	UPROPERTY(BlueprintAssignable, Category = Events)
+	FPlaythroughEventsManagerDelegate OnMessage;
 
-	UPROPERTY(BlueprintAssignable, Category = Events)
-	FPEMDelegate OnConversationCreated;
-	UPROPERTY(BlueprintAssignable, Category = Events)
-	FPEMDelegate OnConnected;
-	UPROPERTY(BlueprintAssignable, Category = Events)
-	FPEMDelegate OnReady;
-	UPROPERTY(BlueprintAssignable, Category = Events)
-	FPEMDelegate OnTyping;
-	UPROPERTY(BlueprintAssignable, Category = Events)
-	FPEMDelegate OnMessage;
-
-	UFUNCTION()
-	void OnConversationCreatedFUNC(int32 ConversationId);
 	UFUNCTION()
 	void OnConnectedFUNC(bool IsConnected);
 	UFUNCTION()

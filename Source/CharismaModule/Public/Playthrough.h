@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CharismaEvents.h"
@@ -12,30 +10,6 @@
 
 #include "Playthrough.generated.h"
 
-USTRUCT(BlueprintType)
-struct FCharismaPlaythroughInfoResponse
-{
-	GENERATED_USTRUCT_BODY()
-
-	UPROPERTY(BlueprintReadWrite)
-	TArray<FCharismaEmotion> Emotions;
-
-	UPROPERTY(BlueprintReadWrite)
-	TArray<FCharismaMemory> Memories;
-};
-
-USTRUCT(BlueprintType)
-struct FCharismaMessageHistoryResponse
-{
-	GENERATED_USTRUCT_BODY()
-
-	UPROPERTY(BlueprintReadWrite)
-	TArray<FCharismaMessage> Messages;
-};
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
-	FTokenDelegate, FString, Token, int32, PlaythroughId, const UPlaythrough*, Playthrough);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FConversationDelegate, int32, ConversationId);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageHistoryDelegate, const FCharismaMessageHistoryResponse&, MessageHistory);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlaythroughInfoDelegate, const FCharismaPlaythroughInfoResponse&, PlaythroughInfo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FConnectionDelegate, bool, IsConnected);
@@ -55,30 +29,30 @@ public:
 
 	// Member
 
-	UFUNCTION()
-	static void CreateCharismaPlaythroughObject(UObject* WorldContextObject, UPlaythrough*& Playthrough);
+	UFUNCTION(BlueprintCallable, Category = Playthrough)
+	static UPlaythrough* NewPlaythroughObject(UObject* WorldContextObject, const FString& Token, const FString& PlaythroughUuid);
 
 	UFUNCTION(BlueprintCallable, Category = Connection)
-	void Connect(const FString& Token, const int32 PlaythroughId);
+	void Connect();
 
 	UFUNCTION(BlueprintCallable, Category = Connection)
 	void Disconnect();
 
 	UFUNCTION(BlueprintCallable, Category = Play)
-	void Action(const int32 ConversationId, const FString& ActionName) const;
+	void Action(const FString& ConversationUuid, const FString& ActionName) const;
 
 	UFUNCTION(BlueprintCallable, Category = Play)
-	void Start(const int32 ConversationId, const int32 SceneIndex, const int32 StartGraphId, const FString& StartGraphReferenceId,
-		const bool UseSpeech = false);
+	void Start(const FString& ConversationUuid, const int32 SceneIndex, const int32 StartGraphId,
+		const FString& StartGraphReferenceId, const bool UseSpeech = false);
 
 	UFUNCTION(BlueprintCallable, Category = Play)
-	void Reply(const int32 ConversationId, const FString& Message) const;
+	void Reply(const FString& ConversationUuid, const FString& Message) const;
 
 	UFUNCTION(BlueprintCallable, Category = Play)
-	void Resume(const int32 ConversationId) const;
+	void Resume(const FString& ConversationUuid) const;
 
 	UFUNCTION(BlueprintCallable, Category = Play)
-	void Tap(const int32 ConversationId) const;
+	void Tap(const FString& ConversationUuid) const;
 
 	UFUNCTION(BlueprintCallable, Category = Play)
 	void ToggleSpeechOn();
@@ -101,15 +75,6 @@ public:
 	// Events
 
 	UPROPERTY(BlueprintAssignable, Category = Events)
-	FConversationDelegate OnConversationCreated;
-
-	UPROPERTY(BlueprintAssignable, Category = Events)
-	FMessageHistoryDelegate OnMessageHistory;
-
-	UPROPERTY(BlueprintAssignable, Category = Events)
-	FPlaythroughInfoDelegate OnPlaythroughInfo;
-
-	UPROPERTY(BlueprintAssignable, Category = Events)
 	FConnectionDelegate OnConnected;
 
 	UPROPERTY(BlueprintAssignable, Category = Events)
@@ -123,14 +88,6 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = Events)
 	FTypingDelegate OnTyping;
-
-	void OnSetMemory(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
-
-	void OnRestartRequestComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
-
-	void OnMessageHistoryComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful) const;
-
-	void OnPlaythroughInfoComplete(FHttpRequestPtr Request, FHttpResponsePtr Response, bool WasSuccessful);
 
 	UPROPERTY(BlueprintReadWrite)
 	TArray<FCharismaEmotion> PlaythroughEmotions;
@@ -151,13 +108,13 @@ private:
 
 	FString CurToken;
 
-	int32 CurPlaythroughId;
+	FString CurPlaythroughUuid;
 
 	UObject* CurWorldContextObject;
 
-	int TryToReconnect = 0;
+	int ReconnectionTryCount = 0;
 
-	bool CalledByDisconnect = false;
+	bool bCalledByDisconnect = false;
 
 	bool bUseSpeech = false;
 

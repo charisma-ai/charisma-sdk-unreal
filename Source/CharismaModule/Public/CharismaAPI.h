@@ -33,19 +33,22 @@ public:
 		const TFunction<void(const FString Error)>& ErrorCallback);
 
 	static void CreateConversation(const FString& PlaythroughToken,
-		const TFunction<void(const FString ConversationUuid, const FString PlaythroughUuid)>& SuccessCallback,
+		const TFunction<void(const FString ConversationUuid)>& SuccessCallback,
 		const TFunction<void(const FString Error)>& ErrorCallback);
 
-	UFUNCTION()
-	static void SetMemoryAPI(UPlaythrough* Playthrough, const FString& Token, const FString& RecallValue, const FString& SaveValue);
+	static void SetMemory(const FString& PlaythroughToken, const FString& RecallValue, const FString& SaveValue,
+		const TFunction<void()>& SuccessCallback,
+		const TFunction<void(const FString Error)>& ErrorCallback);
 
-	UFUNCTION()
-	static void RestartFromEventIdAPI(UPlaythrough* Playthrough, const FString& TokenForRestart, const int64 EventId);
+	static void RestartFromEventId(const FString& PlaythroughToken, const int64 EventId,
+		const TFunction<void()>& SuccessCallback,
+		const TFunction<void(const FString Error)>& ErrorCallback);
 
-	UFUNCTION()
-	static void GetMessageHistoryAPI(
-		UPlaythrough* Playthrough, const FString& Token, const int32 ConversationId, const int64 MinEventId);
+	static void GetMessageHistory(const FString& PlaythroughToken, const FString& ConversationUuid, const int64 MinEventId,
+		const TFunction<void(const FCharismaMessageHistoryResponse MessageHistory)>& SuccessCallback,
+		const TFunction<void(const FString Error)>& ErrorCallback);
 
-	UFUNCTION()
-	static void GetPlaythroughInfoAPI(UPlaythrough* Playthrough, const FString& Token);
+	static void GetPlaythroughInfo(const FString& PlaythroughToken,
+		const TFunction<void(const FCharismaPlaythroughInfoResponse PlaythroughInfo)>& SuccessCallback,
+		const TFunction<void(const FString Error)>& ErrorCallback);
 };
