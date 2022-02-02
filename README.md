@@ -52,9 +52,15 @@ This SDK provides a template Game Mode Blueprint which can help you get started 
 
 1. To use the template, open up "Window" -> "World Settings" and change the "GameMode Override" to `BP_CharismaGameModeTemplate`.
 
+![GameMode Override](/Docs/GameModeOverride.png)
+
 2. Open up the `BP_CharismaGameModeTemplate` Blueprint, and head to the Event Graph. To connect Unreal Engine with your story in Charisma, find the "Create Playthrough Token" node and enter the "Story Id", "Story Version" and "API Key" (as described above).
 
+![Playthrough Token Details](/Docs/PlaythroughTokenDetails.png)
+
 3. *(Only if you are using a game story, not a web story)*, in the "Start" node on the far-right, enter a "Start Graph Reference Id" corresponding to the graph in Charisma you want to start from. The reference ID can be found by clicking the three dots next to the subplot's name in the Charisma editor, and selecting "Rename".
+
+![Start Reference Id](/Docs/StartReferenceId.png)
 
 4. If you play the scene now, you should find that the messages in your story start coming through as on-screen debug messages!
 
@@ -67,6 +73,8 @@ The SDK provides a template actor to do this:
 2. Select the "charisma-ue4 Content" folder and drop the template actor inside the scene.
 
 3. In the "Details" panel, select the "CharismaActor" component, and enter the "Character Name" as it is in the Charisma editor. Then check "Play audio".
+
+![Actor Template](/Docs/ActorTemplate.png)
 
 4. Now, when you play, the actor (character) will play all of its relevant lines on its own audio component!
 
