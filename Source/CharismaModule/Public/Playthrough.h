@@ -32,6 +32,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Playthrough)
 	static UPlaythrough* NewPlaythroughObject(UObject* WorldContextObject, const FString& Token, const FString& PlaythroughUuid);
 
+	static const nlohmann::json SdkInfo;
+
 	UFUNCTION(BlueprintCallable, Category = Connection)
 	void Connect();
 

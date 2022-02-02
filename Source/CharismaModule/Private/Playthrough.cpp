@@ -25,6 +25,8 @@ UPlaythrough* UPlaythrough::NewPlaythroughObject(UObject* WorldContextObject, co
 	return Playthrough;
 }
 
+const nlohmann::json UPlaythrough::SdkInfo = {{"sdkId", "unreal"}, {"sdkVersion", "0.1.0"}, {"protocolVersion", 1}};
+
 void UPlaythrough::Connect()
 {
 	if (bIsPlaying)
@@ -35,11 +37,12 @@ void UPlaythrough::Connect()
 	ClientInstance = MakeShared<Client>(UCharismaAPI::SocketURL);
 	UCharismaAPI::Log(1, "Connecting...", Info);
 	ClientInstance->JoinOrCreate<void>("chat",
-		{{"token", FStringToStdString(CurToken)}, {"playthroughId", FStringToStdString(CurPlaythroughUuid)}},
+		{{"token", FStringToStdString(CurToken)}, {"playthroughId", FStringToStdString(CurPlaythroughUuid)},
+			{"sdkInfo", UPlaythrough::SdkInfo}},
 		[this](TSharedPtr<MatchMakeError> Error, TSharedPtr<Room<void>> Room) {
 			if (Error)
 			{
-				UPlaythrough::ReconnectionFlowCreate();
+				this->ReconnectionFlowCreate();
 				return;
 			}
 
@@ -81,7 +84,7 @@ void UPlaythrough::Connect()
 
 				UCharismaAPI::Log(-1, Event.Message.Character.Name + TEXT(": ") + Event.Message.Text, Info);
 
-				UPlaythrough::SaveEmotionsMemories(Event.Emotions, Event.Memories);
+				this->SaveEmotionsMemories(Event.Emotions, Event.Memories);
 				OnMessage.Broadcast(Event);
 			});
 
@@ -98,7 +101,7 @@ void UPlaythrough::Connect()
 
 			this->RoomInstance->OnLeave = ([this]() {
 				OnConnected.Broadcast(false);
-				UPlaythrough::ReconnectionFlow();
+				this->ReconnectionFlow();
 			});
 
 			this->RoomInstance->OnError =
@@ -271,11 +274,11 @@ void UPlaythrough::ReconnectionFlow()
 
 	UCharismaAPI::Log(1, "Reconnecting...", Info);
 
-	ClientInstance->JoinOrCreate<void>(RoomInstance->Id, {{"sessionId", FStringToStdString(RoomInstance->SessionId)}},
+	ClientInstance->JoinById<void>(RoomInstance->Id, {{"sessionId", FStringToStdString(RoomInstance->SessionId)}},
 		[this](TSharedPtr<MatchMakeError> Error, TSharedPtr<Room<void>> Room) {
 			if (Error)
 			{
-				UPlaythrough::ReconnectionFlowCreate();
+				this->ReconnectionFlowCreate();
 				return;
 			}
 
@@ -317,7 +320,7 @@ void UPlaythrough::ReconnectionFlow()
 
 				UCharismaAPI::Log(-1, Event.Message.Character.Name + TEXT(": ") + Event.Message.Text, Info);
 
-				UPlaythrough::SaveEmotionsMemories(Event.Emotions, Event.Memories);
+				this->SaveEmotionsMemories(Event.Emotions, Event.Memories);
 				OnMessage.Broadcast(Event);
 			});
 
@@ -335,7 +338,7 @@ void UPlaythrough::ReconnectionFlow()
 			this->RoomInstance->OnLeave = ([this]() {
 				OnConnected.Broadcast(false);
 
-				UPlaythrough::ReconnectionFlow();
+				this->ReconnectionFlow();
 			});
 
 			this->RoomInstance->OnError =
@@ -347,7 +350,8 @@ void UPlaythrough::ReconnectionFlow()
 void UPlaythrough::ReconnectionFlowCreate()
 {
 	ClientInstance->JoinOrCreate<void>("chat",
-		{{"token", FStringToStdString(CurToken)}, {"playthroughId", FStringToStdString(CurPlaythroughUuid)}},
+		{{"token", FStringToStdString(CurToken)}, {"playthroughId", FStringToStdString(CurPlaythroughUuid)},
+			{"sdkInfo", UPlaythrough::SdkInfo}},
 		[this](TSharedPtr<MatchMakeError> Error, TSharedPtr<Room<void>> Room) {
 			if (Error)
 			{
@@ -355,7 +359,7 @@ void UPlaythrough::ReconnectionFlowCreate()
 
 				if (ReconnectionTryCount <= 20)
 				{
-					UPlaythrough::ReconnectionDelay();
+					this->ReconnectionDelay();
 				}
 				return;
 			}
@@ -400,7 +404,7 @@ void UPlaythrough::ReconnectionFlowCreate()
 
 				UCharismaAPI::Log(-1, Event.Message.Character.Name + TEXT(": ") + Event.Message.Text, Info);
 
-				UPlaythrough::SaveEmotionsMemories(Event.Emotions, Event.Memories);
+				this->SaveEmotionsMemories(Event.Emotions, Event.Memories);
 				OnMessage.Broadcast(Event);
 			});
 
@@ -417,7 +421,7 @@ void UPlaythrough::ReconnectionFlowCreate()
 
 			this->RoomInstance->OnLeave = ([this]() {
 				OnConnected.Broadcast(false);
-				UPlaythrough::ReconnectionFlow();
+				this->ReconnectionFlow();
 			});
 
 			this->RoomInstance->OnError =
