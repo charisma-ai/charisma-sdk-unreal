@@ -291,7 +291,7 @@ struct FCharismaMessageEvent
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(BlueprintReadOnly)
-	int32 ConversationId;
+	FString ConversationUuid;
 
 	UPROPERTY(BlueprintReadOnly)
 	FString Type;
@@ -317,7 +317,7 @@ struct FCharismaMessageEvent
 	UPROPERTY(BlueprintReadOnly)
 	int64 Timestamp;
 
-	MSGPACK_DEFINE_MAP(MSGPACK_NVP("conversationId", ConversationId), MSGPACK_NVP("type", Type), MSGPACK_NVP("message", Message),
+	MSGPACK_DEFINE_MAP(MSGPACK_NVP("conversationUuid", ConversationUuid), MSGPACK_NVP("type", Type), MSGPACK_NVP("message", Message),
 		MSGPACK_NVP("endStory", EndStory), MSGPACK_NVP("tapToContinue", TapToContinue), MSGPACK_NVP("emotions", Emotions),
 		MSGPACK_NVP("memories", Memories), MSGPACK_NVP("eventId", EventId), MSGPACK_NVP("timestamp", Timestamp));
 };
@@ -333,6 +333,27 @@ struct FCharismaErrorEvent
 	MSGPACK_DEFINE_MAP(MSGPACK_NVP("error", Error));
 };
 
+USTRUCT(BlueprintType)
+struct FCharismaPlaythroughInfoResponse
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(BlueprintReadWrite)
+	TArray<FCharismaEmotion> Emotions;
+
+	UPROPERTY(BlueprintReadWrite)
+	TArray<FCharismaMemory> Memories;
+};
+
+USTRUCT(BlueprintType)
+struct FCharismaMessageHistoryResponse
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(BlueprintReadWrite)
+	TArray<FCharismaMessage> Messages;
+};
+
 // Events sent from client -> server
 
 struct SpeechConfig
@@ -344,40 +365,40 @@ struct SpeechConfig
 
 struct ActionPayload
 {
-	int32 conversationId;
+	std::string conversationUuid;
 	std::string action;
 	TOptional<SpeechConfig> speechConfig;
-	MSGPACK_DEFINE_MAP(conversationId, action, speechConfig);
+	MSGPACK_DEFINE_MAP(conversationUuid, action, speechConfig);
 };
 
 struct StartPayload
 {
-	int32 conversationId;
+	std::string conversationUuid;
 	TOptional<int32> sceneIndex;
 	TOptional<int32> startGraphId;
 	TOptional<std::string> startGraphReferenceId;
 	TOptional<SpeechConfig> speechConfig;
-	MSGPACK_DEFINE_MAP(conversationId, sceneIndex, startGraphId, startGraphReferenceId, speechConfig);
+	MSGPACK_DEFINE_MAP(conversationUuid, sceneIndex, startGraphId, startGraphReferenceId, speechConfig);
 };
 
 struct TapPayload
 {
-	int32 conversationId;
+	std::string conversationUuid;
 	TOptional<SpeechConfig> speechConfig;
-	MSGPACK_DEFINE_MAP(conversationId, speechConfig);
+	MSGPACK_DEFINE_MAP(conversationUuid, speechConfig);
 };
 
 struct ReplyPayload
 {
-	int32 conversationId;
+	std::string conversationUuid;
 	std::string text;
 	TOptional<SpeechConfig> speechConfig;
-	MSGPACK_DEFINE_MAP(conversationId, text, speechConfig);
+	MSGPACK_DEFINE_MAP(conversationUuid, text, speechConfig);
 };
 
 struct ResumePayload
 {
-	int32 conversationId;
+	std::string conversationUuid;
 	TOptional<SpeechConfig> speechConfig;
-	MSGPACK_DEFINE_MAP(conversationId, speechConfig);
+	MSGPACK_DEFINE_MAP(conversationUuid, speechConfig);
 };
