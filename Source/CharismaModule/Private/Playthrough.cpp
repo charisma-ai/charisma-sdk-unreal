@@ -25,7 +25,7 @@ UPlaythrough* UPlaythrough::NewPlaythroughObject(UObject* WorldContextObject, co
 	return Playthrough;
 }
 
-const nlohmann::json UPlaythrough::SdkInfo = {{"sdkId", "unreal"}, {"sdkVersion", "0.1.0"}, {"protocolVersion", 1}};
+const nlohmann::json UPlaythrough::SdkInfo = {{"sdkId", "unreal"}, {"sdkVersion", "0.2.0"}, {"protocolVersion", 1}};
 
 void UPlaythrough::Connect()
 {
