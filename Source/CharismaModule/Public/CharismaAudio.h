@@ -27,6 +27,7 @@ class USoundWave_InMemoryOgg : public USoundWave
 	GENERATED_BODY()
 
 public:
+#if ENGINE_MAJOR_VERSION < 5
 	virtual bool HasCompressedData(FName Format, ITargetPlatform* TargetPlatform) const override
 	{
 		// Default implementation appends a hash to the format name which is specific to the platform,
@@ -39,11 +40,6 @@ public:
 		return CompressedFormatData.Contains(Format);
 	}
 
-	virtual void BeginGetCompressedData(FName Format, const FPlatformAudioCookOverrides* CompressionOverrides) override
-	{
-		// Do nothing, data is already in memory
-	}
-
 	virtual FByteBulkData* GetCompressedData(
 		FName Format, const FPlatformAudioCookOverrides* CompressionOverrides = nullptr) override
 	{
@@ -52,6 +48,12 @@ public:
 			return &CompressedFormatData.GetFormat(Format);
 		}
 		return nullptr;
+	}
+#endif
+
+	virtual void BeginGetCompressedData(FName Format, const FPlatformAudioCookOverrides* CompressionOverrides) override
+	{
+		// Do nothing, data is already in memory
 	}
 
 	virtual void InitAudioResource(FByteBulkData& CompressedData) override
@@ -62,6 +64,11 @@ public:
 
 	virtual bool InitAudioResource(FName Format) override
 	{
+#if ENGINE_MAJOR_VERSION >= 5
+		int32 ResourceSize = GetResourceSize();
+		const uint8* ResourceData = GetResourceData();
+#endif
+
 		if (!ResourceSize && (!FPlatformProperties::SupportsAudioStreaming() || !IsStreaming(nullptr)))
 		{
 			FByteBulkData* Bulk = GetCompressedData(Format, GetPlatformCompressionOverridesForCurrentPlatform());

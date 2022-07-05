@@ -2,7 +2,12 @@
 
 #include "ColyseusUtils.h"
 
+#pragma push_macro("check")
+#undef check
+
 #include <msgpack.hpp>
+
+#pragma pop_macro("check")
 
 #include "CharismaEvents.generated.h"
 

@@ -436,6 +436,14 @@ void UPlaythrough::ReconnectionDelay()
 	DelayTime = DelayTime + FMath::RandRange(0, 3);
 	FTimerHandle ReconnectionTimer;
 
+#if ENGINE_MAJOR_VERSION < 5
 	UWorld* World = GEngine->GetWorldFromContextObject(CurWorldContextObject);
 	World->GetTimerManager().SetTimer(ReconnectionTimer, this, &UPlaythrough::ReconnectionFlowCreate, DelayTime, false);
+#else
+	UWorld* World = GEngine->GetWorldFromContextObject(CurWorldContextObject, EGetWorldErrorMode::ReturnNull);
+	if (World != nullptr)
+	{
+		World->GetTimerManager().SetTimer(ReconnectionTimer, this, &UPlaythrough::ReconnectionFlowCreate, DelayTime, false);
+	}
+#endif
 }

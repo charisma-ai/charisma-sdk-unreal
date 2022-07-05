@@ -35,7 +35,11 @@ USoundWave* UCharismaAudio::CreateSoundFromBytes(const TArray<uint8>& RawBytes)
 		return nullptr;
 	}
 
+#if ENGINE_MAJOR_VERSION < 5
 	FByteBulkData* BulkData = &SoundWaveRef->CompressedFormatData.GetFormat(FName("OGG"));
+#else
+	FByteBulkData* BulkData = SoundWaveRef->GetCompressedData(FName("OGG"));
+#endif
 
 	BulkData->Lock(LOCK_READ_WRITE);
 	FMemory::Memmove(BulkData->Realloc(RawBytes.Num()), RawBytes.GetData(), RawBytes.Num());
