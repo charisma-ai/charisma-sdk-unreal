@@ -137,16 +137,16 @@ void UPlaythrough::Action(const FString& ConversationUuid, const FString& Action
 	payload.conversationUuid = FStringToStdString(ConversationUuid);
 	payload.action = FStringToStdString(ActionName);
 
-	if (bUseSpeech)
+	if (SpeechAudioFormat != ECharismaSpeechAudioFormat::None)
 	{
-		payload.speechConfig = GetSpeechConfig();
+		payload.speechConfig = GetSpeechConfig(SpeechAudioFormat);
 	}
 
 	RoomInstance->Send("action", payload);
 }
 
 void UPlaythrough::Start(const FString& ConversationUuid, const int32 SceneIndex, const int32 StartGraphId,
-	const FString& StartGraphReferenceId, const bool UseSpeech)
+	const FString& StartGraphReferenceId, const ECharismaSpeechAudioFormat AudioFormat)
 {
 	if (!RoomInstance)
 	{
@@ -155,7 +155,7 @@ void UPlaythrough::Start(const FString& ConversationUuid, const int32 SceneIndex
 	}
 
 	bIsPlaying = true;
-	bUseSpeech = UseSpeech;
+	SpeechAudioFormat = AudioFormat;
 
 	StartPayload payload;
 	payload.conversationUuid = FStringToStdString(ConversationUuid);
@@ -175,9 +175,9 @@ void UPlaythrough::Start(const FString& ConversationUuid, const int32 SceneIndex
 		payload.startGraphReferenceId = FStringToStdString(StartGraphReferenceId);
 	}
 
-	if (bUseSpeech)
+	if (SpeechAudioFormat != ECharismaSpeechAudioFormat::None)
 	{
-		payload.speechConfig = GetSpeechConfig();
+		payload.speechConfig = GetSpeechConfig(SpeechAudioFormat);
 	}
 
 	RoomInstance->Send("start", payload);
@@ -194,9 +194,9 @@ void UPlaythrough::Tap(const FString& ConversationUuid) const
 	TapPayload payload;
 	payload.conversationUuid = FStringToStdString(ConversationUuid);
 
-	if (bUseSpeech)
+	if (SpeechAudioFormat != ECharismaSpeechAudioFormat::None)
 	{
-		payload.speechConfig = GetSpeechConfig();
+		payload.speechConfig = GetSpeechConfig(SpeechAudioFormat);
 	}
 
 	RoomInstance->Send("tap", payload);
@@ -214,9 +214,9 @@ void UPlaythrough::Reply(const FString& ConversationUuid, const FString& Message
 	payload.conversationUuid = FStringToStdString(ConversationUuid);
 	payload.text = FStringToStdString(Message);
 
-	if (bUseSpeech)
+	if (SpeechAudioFormat != ECharismaSpeechAudioFormat::None)
 	{
-		payload.speechConfig = GetSpeechConfig();
+		payload.speechConfig = GetSpeechConfig(SpeechAudioFormat);
 	}
 
 	RoomInstance->Send("reply", payload);
@@ -233,28 +233,38 @@ void UPlaythrough::Resume(const FString& ConversationUuid) const
 	ResumePayload payload;
 	payload.conversationUuid = FStringToStdString(ConversationUuid);
 
-	if (bUseSpeech)
+	if (SpeechAudioFormat != ECharismaSpeechAudioFormat::None)
 	{
-		payload.speechConfig = GetSpeechConfig();
+		payload.speechConfig = GetSpeechConfig(SpeechAudioFormat);
 	}
 
 	RoomInstance->Send("resume", payload);
 }
 
-void UPlaythrough::ToggleSpeechOn()
+void UPlaythrough::ToggleSpeech(const ECharismaSpeechAudioFormat AudioFormat)
 {
-	bUseSpeech = true;
+	SpeechAudioFormat = AudioFormat;
 }
 
-void UPlaythrough::ToggleSpeechOff()
-{
-	bUseSpeech = false;
-}
-
-SpeechConfig UPlaythrough::GetSpeechConfig() const
+SpeechConfig UPlaythrough::GetSpeechConfig(const ECharismaSpeechAudioFormat AudioFormat) const
 {
 	SpeechConfig speechConfig;
-	speechConfig.encoding = "ogg";
+	if (AudioFormat == ECharismaSpeechAudioFormat::Mp3)
+	{
+		speechConfig.encoding = "mp3";
+	}
+	else if (AudioFormat == ECharismaSpeechAudioFormat::Wav)
+	{
+		speechConfig.encoding = "wav";
+	}
+	else if (AudioFormat == ECharismaSpeechAudioFormat::Pcm)
+	{
+		speechConfig.encoding = "pcm";
+	}
+	else if (AudioFormat == ECharismaSpeechAudioFormat::Ogg)
+	{
+		speechConfig.encoding = "ogg";
+	}
 	speechConfig.output = "buffer";
 	return speechConfig;
 }

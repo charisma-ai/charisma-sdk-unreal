@@ -10,6 +10,16 @@
 
 #include "Playthrough.generated.h"
 
+UENUM(BlueprintType, Category = "Charisma Playthrough")
+enum class ECharismaSpeechAudioFormat : uint8
+{
+	None UMETA(DisplayName = "No speech"),
+	Mp3 UMETA(DisplayName = "mp3"),
+	Wav UMETA(DisplayName = "wav"),
+	Pcm UMETA(DisplayName = "pcm"),
+	Ogg UMETA(DisplayName = "ogg")
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageHistoryDelegate, const FCharismaMessageHistoryResponse&, MessageHistory);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlaythroughInfoDelegate, const FCharismaPlaythroughInfoResponse&, PlaythroughInfo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FConnectionDelegate, bool, IsConnected);
@@ -29,38 +39,35 @@ public:
 
 	// Member
 
-	UFUNCTION(BlueprintCallable, Category = Playthrough)
+	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
 	static UPlaythrough* NewPlaythroughObject(UObject* WorldContextObject, const FString& Token, const FString& PlaythroughUuid);
 
 	static const nlohmann::json SdkInfo;
 
-	UFUNCTION(BlueprintCallable, Category = Connection)
+	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
 	void Connect();
 
-	UFUNCTION(BlueprintCallable, Category = Connection)
+	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
 	void Disconnect();
 
-	UFUNCTION(BlueprintCallable, Category = Play)
+	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
 	void Action(const FString& ConversationUuid, const FString& ActionName) const;
 
-	UFUNCTION(BlueprintCallable, Category = Play)
+	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
 	void Start(const FString& ConversationUuid, const int32 SceneIndex, const int32 StartGraphId,
-		const FString& StartGraphReferenceId, const bool UseSpeech = false);
+		const FString& StartGraphReferenceId, const ECharismaSpeechAudioFormat SpeechAudioFormat = ECharismaSpeechAudioFormat::None);
 
-	UFUNCTION(BlueprintCallable, Category = Play)
+	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
 	void Reply(const FString& ConversationUuid, const FString& Message) const;
 
-	UFUNCTION(BlueprintCallable, Category = Play)
+	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
 	void Resume(const FString& ConversationUuid) const;
 
-	UFUNCTION(BlueprintCallable, Category = Play)
+	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
 	void Tap(const FString& ConversationUuid) const;
 
-	UFUNCTION(BlueprintCallable, Category = Play)
-	void ToggleSpeechOn();
-
-	UFUNCTION(BlueprintCallable, Category = Play)
-	void ToggleSpeechOff();
+	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
+	void ToggleSpeech(const ECharismaSpeechAudioFormat AudioFormat);
 
 	UFUNCTION()
 	void SaveEmotionsMemories(const TArray<FCharismaEmotion>& Emotions, const TArray<FCharismaMemory>& Memories);
@@ -100,7 +107,7 @@ public:
 private:
 	// Member
 
-	SpeechConfig GetSpeechConfig() const;
+	SpeechConfig GetSpeechConfig(const ECharismaSpeechAudioFormat AudioFormat) const;
 
 	// Properties
 
@@ -118,7 +125,7 @@ private:
 
 	bool bCalledByDisconnect = false;
 
-	bool bUseSpeech = false;
+	ECharismaSpeechAudioFormat SpeechAudioFormat = ECharismaSpeechAudioFormat::None;
 
 	bool bIsPlaying = false;
 };
