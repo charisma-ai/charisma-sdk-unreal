@@ -1,6 +1,5 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "CharismaActorComponent.h"
 
 // Sets default values for this component's properties
@@ -13,7 +12,6 @@ UCharismaActorComponent::UCharismaActorComponent()
 	// ...
 }
 
-
 // Called when the game starts
 void UCharismaActorComponent::BeginPlay()
 {
@@ -25,6 +23,9 @@ void UCharismaActorComponent::BeginPlay()
 	GameModeComponent = GameMode->FindComponentByClass<UCharismaGameModeComponent>();
 
 	BindToPlaythrough();
+
+	RuntimeAudioImporterLibrary = URuntimeAudioImporterLibrary::CreateRuntimeAudioImporter();
+	RuntimeAudioImporterLibrary->OnResult.AddDynamic(this, &UCharismaActorComponent::OnAudioDecoded);
 }
 
 void UCharismaActorComponent::BindToPlaythrough()
@@ -32,7 +33,7 @@ void UCharismaActorComponent::BindToPlaythrough()
 	Playthrough = GameModeComponent->Playthrough;
 	if (Playthrough)
 	{
-		Playthrough->OnMessage.AddDynamic(this, &UCharismaActorComponent::MessageReceived);
+		Playthrough->OnMessage.AddDynamic(this, &UCharismaActorComponent::OnMessageReceived);
 	}
 	else
 	{
@@ -40,18 +41,25 @@ void UCharismaActorComponent::BindToPlaythrough()
 	}
 }
 
-void UCharismaActorComponent::MessageReceived(const FCharismaMessageEvent& Message)
+void UCharismaActorComponent::OnMessageReceived(const FCharismaMessageEvent& Message)
 {
 	if (CharacterName == Message.Message.Character.Name)
 	{
 		CharacterEmotions = Message.Emotions;
-		
-		if (PlayAudio == true)
+
+		if (bPlayAudio && CharacterAudioComponent)
 		{
-			if (CharacterAudioComponent) {
-				CharacterAudioComponent->SetSound(UCharismaAudio::CreateSoundFromBytes(Message.Message.Speech.Audio));
-				CharacterAudioComponent->Play();
-			}
+			RuntimeAudioImporterLibrary->ImportAudioFromBuffer(Message.Message.Speech.Audio, EAudioFormat::Auto);
 		}
+	}
+}
+
+void UCharismaActorComponent::OnAudioDecoded(
+	URuntimeAudioImporterLibrary* RuntimeAudioImporterLibraryRef, UImportedSoundWave* SoundWaveRef, ETranscodingStatus Status)
+{
+	if (Status == ETranscodingStatus::SuccessfulImport)
+	{
+		CharacterAudioComponent->SetSound(SoundWaveRef);
+		CharacterAudioComponent->Play();
 	}
 }

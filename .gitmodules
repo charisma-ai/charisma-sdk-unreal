@@ -1,3 +1,6 @@
 [submodule "Source/ThirdParty/colyseus-unreal"]
 	path = Source/ThirdParty/colyseus-unreal
 	url = https://github.com/charisma-ai/colyseus-unreal
+[submodule "Source/ThirdParty/RuntimeAudioImporter"]
+	path = Source/ThirdParty/RuntimeAudioImporter
+	url = https://github.com/gtreshchev/RuntimeAudioImporter

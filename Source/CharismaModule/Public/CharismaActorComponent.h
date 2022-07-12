@@ -1,6 +1,5 @@
 #pragma once
 
-#include "CharismaAudio.h"
 #include "CharismaGameModeComponent.h"
 #include "Components/ActorComponent.h"
 #include "CoreMinimal.h"
@@ -8,6 +7,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Playthrough.h"
+#include "RuntimeAudioImporterLibrary.h"
+#include "Components/AudioComponent.h"
 
 #include "CharismaActorComponent.generated.h"
 
@@ -24,7 +25,7 @@ public:
 	FString CharacterName;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	bool PlayAudio = false;
+	bool bPlayAudio = false;
 
 	UPROPERTY()
 	UAudioComponent* CharacterAudioComponent;
@@ -39,18 +40,21 @@ public:
 	FTimerHandle Timer;
 
 	UPROPERTY()
-	bool LoopInit = true;
-
-	UPROPERTY()
 	UCharismaGameModeComponent* GameModeComponent;
-
-	UFUNCTION()
-	void MessageReceived(const FCharismaMessageEvent& Message);
 
 	UFUNCTION()
 	void BindToPlaythrough();
 
+	UFUNCTION()
+	void OnMessageReceived(const FCharismaMessageEvent& Message);
+
+	UFUNCTION()
+	void OnAudioDecoded(
+		URuntimeAudioImporterLibrary* RuntimeAudioImporterLibraryRef, UImportedSoundWave* SoundWaveRef, ETranscodingStatus Status);
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+
+	URuntimeAudioImporterLibrary* RuntimeAudioImporterLibrary;
 };
