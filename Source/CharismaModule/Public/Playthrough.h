@@ -27,6 +27,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTypingDelegate, bool, IsTyping);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageDelegate, const FCharismaMessageEvent&, MessageEvent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FErrorDelegate, const FCharismaErrorEvent&, ErrorEvent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FReadyDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPingSuccessDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPingFailureDelegate);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class CHARISMAMODULE_API UPlaythrough : public UObject
@@ -55,7 +57,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
 	void Start(const FString& ConversationUuid, const int32 SceneIndex, const int32 StartGraphId,
-		const FString& StartGraphReferenceId, const ECharismaSpeechAudioFormat SpeechAudioFormat = ECharismaSpeechAudioFormat::None);
+		const FString& StartGraphReferenceId,
+		const ECharismaSpeechAudioFormat SpeechAudioFormat = ECharismaSpeechAudioFormat::None);
 
 	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
 	void Reply(const FString& ConversationUuid, const FString& Message) const;
@@ -98,16 +101,33 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = Events)
 	FTypingDelegate OnTyping;
 
+	UPROPERTY(BlueprintAssignable, Category = Events)
+	FPingSuccessDelegate OnPingSuccess;
+
+	UPROPERTY(BlueprintAssignable, Category = Events)
+	FPingFailureDelegate OnPingFailure;
+
 	UPROPERTY(BlueprintReadWrite)
 	TArray<FCharismaEmotion> PlaythroughEmotions;
 
 	UPROPERTY(BlueprintReadWrite)
 	TArray<FCharismaMemory> PlaythroughMemories;
 
+	UPROPERTY(BlueprintReadWrite)
+	float TimeBetweenPings = 2.0f;
+
+	UPROPERTY(BlueprintReadWrite)
+	uint8 MinimumPingsToConsiderFailed = 3;
+
 private:
 	// Member
 
 	SpeechConfig GetSpeechConfig(const ECharismaSpeechAudioFormat AudioFormat) const;
+
+	void OnRoomJoined(TSharedPtr<Room<void>> Room);
+
+	UFUNCTION()
+	void FirePing();
 
 	// Properties
 
@@ -121,7 +141,11 @@ private:
 
 	UObject* CurWorldContextObject;
 
-	int ReconnectionTryCount = 0;
+	uint8 PingCount = 0;
+
+	FTimerHandle PingTimerHandle;
+
+	uint8 ReconnectionTryCount = 0;
 
 	bool bCalledByDisconnect = false;
 
