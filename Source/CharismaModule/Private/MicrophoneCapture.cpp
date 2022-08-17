@@ -49,8 +49,13 @@ bool UMicrophoneCapture::StartCapture(int32 SampleRate)
 	VoiceCapture->Start();
 	bIsCaptureActive = true;
 
+#if ENGINE_MAJOR_VERSION < 5
+	TickerHandle =
+		FTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([this](float TimeDelta) { return Tick(TimeDelta); }));
+#else
 	TickerHandle =
 		FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([this](float TimeDelta) { return Tick(TimeDelta); }));
+#endif
 
 	return true;
 }
@@ -66,7 +71,11 @@ void UMicrophoneCapture::StopCapture()
 
 	if (TickerHandle.IsValid())
 	{
+#if ENGINE_MAJOR_VERSION < 5
+		FTicker::GetCoreTicker().RemoveTicker(TickerHandle);
+#else
 		FTSTicker::GetCoreTicker().RemoveTicker(TickerHandle);
+#endif
 	}
 }
 

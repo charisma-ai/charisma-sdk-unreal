@@ -20,6 +20,10 @@ public:
 	TFunction<void(const TArray<uint8>& Audio, const uint32 AudioLength)> OnSpeechAudio;
 
 private:
+#if ENGINE_MAJOR_VERSION < 5
+	FDelegateHandle TickerHandle;
+#else
 	FTSTicker::FDelegateHandle TickerHandle;
+#endif
 	TSharedPtr<class IVoiceCapture> VoiceCapture;
 };
