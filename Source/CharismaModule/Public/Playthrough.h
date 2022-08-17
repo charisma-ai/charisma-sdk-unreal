@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Math/UnrealMathUtility.h"
+#include "MicrophoneCapture.h"
 #include "Room.h"
 #include "UObject/NoExportTypes.h"
 
@@ -29,6 +30,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FErrorDelegate, const FCharismaError
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FReadyDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPingSuccessDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPingFailureDelegate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSpeechRecognitionResultDelegate, const FString&, Transcript, bool, IsFinal);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class CHARISMAMODULE_API UPlaythrough : public UObject
@@ -75,6 +77,12 @@ public:
 	UFUNCTION()
 	void SaveEmotionsMemories(const TArray<FCharismaEmotion>& Emotions, const TArray<FCharismaMemory>& Memories);
 
+	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
+	void StartSpeechRecognition(bool& bWasSuccessful);
+
+	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
+	void StopSpeechRecognition();
+
 	UFUNCTION()
 	void ReconnectionFlow();
 
@@ -106,6 +114,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = Events)
 	FPingFailureDelegate OnPingFailure;
+
+	UPROPERTY(BlueprintAssignable, Category = Events)
+	FSpeechRecognitionResultDelegate OnSpeechRecognitionResult;
 
 	UPROPERTY(BlueprintReadWrite)
 	TArray<FCharismaEmotion> PlaythroughEmotions;
@@ -152,4 +163,6 @@ private:
 	ECharismaSpeechAudioFormat SpeechAudioFormat = ECharismaSpeechAudioFormat::None;
 
 	bool bIsPlaying = false;
+
+	TSharedPtr<UMicrophoneCapture> MicrophoneCaptureInstance;
 };

@@ -32,6 +32,7 @@ public class CharismaModule : ModuleRules
 				"JsonUtilities", 
 				"ColyseusClient",
 				"RuntimeAudioImporter",
+				"Voice",
 			}
 		);
 

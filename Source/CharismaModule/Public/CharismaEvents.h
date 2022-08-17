@@ -103,6 +103,23 @@ MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS)
 		}
 	};
 
+	template <>
+	struct pack<TArray<uint8>>
+	{
+		template <typename Stream>
+		msgpack::packer<Stream>& operator()(msgpack::packer<Stream>& o, const TArray<uint8>& v) const
+		{
+			int32 size = v.Num();
+			o.pack_bin(size);
+			if (size != 0)
+			{
+				o.pack_bin_body(reinterpret_cast<const char*>(v.GetData()), size);
+			}
+
+			return o;
+		}
+	};
+
 	template <typename T>
 	struct convert<TArray<T>>
 	{
@@ -359,6 +376,84 @@ struct FCharismaMessageHistoryResponse
 	TArray<FCharismaMessage> Messages;
 };
 
+
+USTRUCT(BlueprintType)
+struct FCharismaSpeechRecognitionResultEventAWSResultAlternatives
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(BlueprintReadOnly)
+	FString Transcript;
+
+	MSGPACK_DEFINE_MAP(Transcript);
+};
+
+USTRUCT(BlueprintType)
+struct FCharismaSpeechRecognitionResultEventAWSResult
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(BlueprintReadOnly)
+	FString ResultId;
+
+	UPROPERTY(BlueprintReadOnly)
+	float StartTime;
+
+	UPROPERTY(BlueprintReadOnly)
+	float EndTime;
+
+	UPROPERTY(BlueprintReadOnly)
+	bool IsPartial;
+
+	UPROPERTY(BlueprintReadOnly)
+	TArray<FCharismaSpeechRecognitionResultEventAWSResultAlternatives> Alternatives;
+
+	MSGPACK_DEFINE_MAP(ResultId, StartTime, EndTime, IsPartial, Alternatives);
+};
+
+USTRUCT(BlueprintType)
+struct FCharismaSpeechRecognitionResultEventAWSTranscript
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(BlueprintReadOnly)
+	TArray<FCharismaSpeechRecognitionResultEventAWSResult> Results;
+
+	MSGPACK_DEFINE_MAP(Results);
+};
+
+USTRUCT(BlueprintType)
+struct FCharismaSpeechRecognitionResultEventAWSTranscriptEvent
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(BlueprintReadOnly)
+	FCharismaSpeechRecognitionResultEventAWSTranscript Transcript;
+
+	MSGPACK_DEFINE_MAP(Transcript);
+};
+
+USTRUCT(BlueprintType)
+struct FCharismaSpeechRecognitionResultEventAWS
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(BlueprintReadOnly)
+	FCharismaSpeechRecognitionResultEventAWSTranscriptEvent TranscriptEvent;
+
+	MSGPACK_DEFINE_MAP(TranscriptEvent);
+};
+
+USTRUCT(BlueprintType)
+struct FCharismaSpeechRecognitionResultEvent
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY(BlueprintReadOnly)
+	FString Transcript;
+};
+
+
 // Events sent from client -> server
 
 struct SpeechConfig
@@ -406,4 +501,10 @@ struct ResumePayload
 	std::string conversationUuid;
 	TOptional<SpeechConfig> speechConfig;
 	MSGPACK_DEFINE_MAP(conversationUuid, speechConfig);
+};
+
+struct SpeechRecognitionStartPayload
+{
+	std::string service;
+	MSGPACK_DEFINE_MAP(service);
 };

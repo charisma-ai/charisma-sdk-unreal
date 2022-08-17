@@ -108,6 +108,19 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 			OnPingSuccess.Broadcast();
 		});
 
+	this->RoomInstance->OnMessage("speech-recognition-error",
+		[this](const msgpack::object& message) { UCharismaAPI::Log(-1, TEXT("Speech recognition error"), Error); });
+	this->RoomInstance->OnMessage("speech-recognition-result",
+		[this](const msgpack::object& message)
+		{
+			FCharismaSpeechRecognitionResultEventAWS Event = message.as<FCharismaSpeechRecognitionResultEventAWS>();
+			if (Event.TranscriptEvent.Transcript.Results.Num() > 0)
+			{
+				OnSpeechRecognitionResult.Broadcast(Event.TranscriptEvent.Transcript.Results[0].Alternatives[0].Transcript,
+					!Event.TranscriptEvent.Transcript.Results[0].IsPartial);
+			}
+		});
+
 	this->RoomInstance->OnLeave = ([this](int32 StatusCode) {
 				OnConnected.Broadcast(false);
 				this->ReconnectionFlow();
@@ -316,6 +329,49 @@ void UPlaythrough::SaveEmotionsMemories(const TArray<FCharismaEmotion>& Emotions
 {
 	PlaythroughEmotions = Emotions;
 	PlaythroughMemories = Memories;
+}
+
+void UPlaythrough::StartSpeechRecognition(bool& bWasSuccessful)
+{
+	if (!RoomInstance)
+	{
+		UCharismaAPI::Log(6, "Charisma must be connected to before sending events.", Warning, 5.f);
+		return;
+	}
+
+	if (!MicrophoneCaptureInstance.IsValid())
+	{
+		MicrophoneCaptureInstance = MakeShared<UMicrophoneCapture>();
+	}
+
+	MicrophoneCaptureInstance->OnSpeechAudio = [this](const TArray<uint8>& Audio, uint32 AudioLength)
+	{ RoomInstance->Send("speech-recognition-chunk", Audio); };
+
+	bWasSuccessful = MicrophoneCaptureInstance->StartCapture();
+
+	if (bWasSuccessful)
+	{
+		SpeechRecognitionStartPayload payload;
+		payload.service = FStringToStdString(TEXT("aws"));
+
+		RoomInstance->Send("speech-recognition-start", payload);
+	}
+}
+
+void UPlaythrough::StopSpeechRecognition()
+{
+	if (!RoomInstance)
+	{
+		UCharismaAPI::Log(6, "Charisma must be connected to before sending events.", Warning, 5.f);
+		return;
+	}
+
+	if (MicrophoneCaptureInstance)
+	{
+		MicrophoneCaptureInstance->StopCapture();
+	}
+
+	RoomInstance->Send("speech-recognition-stop");
 }
 
 void UPlaythrough::ReconnectionFlow()
