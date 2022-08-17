@@ -51,4 +51,8 @@ public:
 	static void GetPlaythroughInfo(const FString& PlaythroughToken,
 		const TFunction<void(const FCharismaPlaythroughInfoResponse PlaythroughInfo)>& SuccessCallback,
 		const TFunction<void(const FString Error)>& ErrorCallback);
+
+	static void ForkPlaythrough(const FString& Token,
+		const TFunction<void(const FString NewToken, const FString PlaythroughUuid)>& SuccessCallback,
+		const TFunction<void(const FString Error)>& ErrorCallback);
 };

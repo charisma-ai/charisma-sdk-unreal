@@ -93,48 +93,50 @@ void UCharismaAPI::CreatePlaythroughToken(const int32 StoryId, const int32 Story
 	HttpRequest->SetURL(BaseURL + "/play/token");
 	HttpRequest->SetContentAsString(OutputString);
 
-	HttpRequest->OnProcessRequestComplete().BindLambda([SuccessCallback, ErrorCallback](const FHttpRequestPtr Request,
-														   const FHttpResponsePtr Response, const bool WasSuccessful) {
-		if (!WasSuccessful)
+	HttpRequest->OnProcessRequestComplete().BindLambda(
+		[SuccessCallback, ErrorCallback](const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful)
 		{
-			ErrorCallback(TEXT("`/play/token`: Error! HTTP request was not successful."));
-			return;
-		}
+			if (!WasSuccessful)
+			{
+				ErrorCallback(TEXT("`/play/token`: Error! HTTP request was not successful."));
+				return;
+			}
 
-		const int32 ResponseCode = Response->GetResponseCode();
-		const FString Content = Response->GetContentAsString();
+			const int32 ResponseCode = Response->GetResponseCode();
+			const FString Content = Response->GetContentAsString();
 
-		if (ResponseCode != 200)
-		{
-			TArray<FStringFormatArg> Args;
-			Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
-			Args.Add(FStringFormatArg(Content));
-			FString ErrorMessage = FString::Format(TEXT("`/play/token`: Error! (Response code: {0}): {1}"), Args);
+			if (ResponseCode != 200)
+			{
+				TArray<FStringFormatArg> Args;
+				Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
+				Args.Add(FStringFormatArg(Content));
+				FString ErrorMessage = FString::Format(TEXT("`/play/token`: Error! (Response code: {0}): {1}"), Args);
 
-			UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
-			ErrorCallback(ErrorMessage);
+				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+				ErrorCallback(ErrorMessage);
 
-			return;
-		}
+				return;
+			}
 
-		TSharedPtr<FJsonObject> ResponseData = MakeShareable(new FJsonObject);
+			TSharedPtr<FJsonObject> ResponseData = MakeShareable(new FJsonObject);
 
-		const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Content);
-		if (!FJsonSerializer::Deserialize(Reader, ResponseData))
-		{
-			TArray<FStringFormatArg> Args;
-			Args.Add(FStringFormatArg(Content));
-			FString ErrorMessage = FString::Format(TEXT("`/play/token`: Error! Failed to deserialize response data: {0}"), Args);
+			const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Content);
+			if (!FJsonSerializer::Deserialize(Reader, ResponseData))
+			{
+				TArray<FStringFormatArg> Args;
+				Args.Add(FStringFormatArg(Content));
+				FString ErrorMessage =
+					FString::Format(TEXT("`/play/token`: Error! Failed to deserialize response data: {0}"), Args);
 
-			UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
-			ErrorCallback(ErrorMessage);
-			return;
-		}
+				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+				ErrorCallback(ErrorMessage);
+				return;
+			}
 
-		const FString Token = ResponseData->GetStringField(TEXT("token"));
-		const FString PlaythroughUuid = ResponseData->GetStringField(TEXT("playthroughUuid"));
-		SuccessCallback(Token, PlaythroughUuid);
-	});
+			const FString Token = ResponseData->GetStringField(TEXT("token"));
+			const FString PlaythroughUuid = ResponseData->GetStringField(TEXT("playthroughUuid"));
+			SuccessCallback(Token, PlaythroughUuid);
+		});
 
 	HttpRequest->ProcessRequest();
 }
@@ -150,7 +152,8 @@ void UCharismaAPI::CreateConversation(const FString& Token, const TFunction<void
 	HttpRequest->SetURL(UCharismaAPI::BaseURL + "/play/conversation");
 
 	HttpRequest->OnProcessRequestComplete().BindLambda(
-		[SuccessCallback, ErrorCallback](const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful) {
+		[SuccessCallback, ErrorCallback](const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful)
+		{
 			if (!WasSuccessful)
 			{
 				ErrorCallback(TEXT("`/play/conversation`: Error! HTTP request was not successful."));
@@ -196,8 +199,7 @@ void UCharismaAPI::CreateConversation(const FString& Token, const TFunction<void
 }
 
 void UCharismaAPI::SetMemory(const FString& Token, const FString& RecallValue, const FString& SaveValue,
-	const TFunction<void()>& SuccessCallback,
-	const TFunction<void(const FString Error)>& ErrorCallback)
+	const TFunction<void()>& SuccessCallback, const TFunction<void(const FString Error)>& ErrorCallback)
 {
 	TSharedPtr<FJsonObject> RequestData = MakeShareable(new FJsonObject);
 	RequestData->SetStringField("memoryRecallValue", RecallValue);
@@ -217,7 +219,8 @@ void UCharismaAPI::SetMemory(const FString& Token, const FString& RecallValue, c
 	HttpRequest->SetContentAsString(OutputString);
 
 	HttpRequest->OnProcessRequestComplete().BindLambda(
-		[SuccessCallback, ErrorCallback](const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful) {
+		[SuccessCallback, ErrorCallback](const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful)
+		{
 			if (!WasSuccessful)
 			{
 				ErrorCallback(TEXT("`/play/set-memory`: Error! HTTP request was not successful."));
@@ -239,13 +242,14 @@ void UCharismaAPI::SetMemory(const FString& Token, const FString& RecallValue, c
 
 				return;
 			}
+
+			SuccessCallback();
 		});
 
 	HttpRequest->ProcessRequest();
 }
 
-void UCharismaAPI::RestartFromEventId(const FString& TokenForRestart, const int64 EventId,
-	const TFunction<void()>& SuccessCallback,
+void UCharismaAPI::RestartFromEventId(const FString& TokenForRestart, const int64 EventId, const TFunction<void()>& SuccessCallback,
 	const TFunction<void(const FString Error)>& ErrorCallback)
 {
 	TSharedPtr<FJsonObject> RequestData = MakeShareable(new FJsonObject);
@@ -265,7 +269,8 @@ void UCharismaAPI::RestartFromEventId(const FString& TokenForRestart, const int6
 	HttpRequest->SetContentAsString(OutputString);
 
 	HttpRequest->OnProcessRequestComplete().BindLambda(
-		[SuccessCallback, ErrorCallback](const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful) {
+		[SuccessCallback, ErrorCallback](const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful)
+		{
 			if (!WasSuccessful)
 			{
 				ErrorCallback(TEXT("`/play/restart-from-event`: Error! HTTP request was not successful."));
@@ -318,7 +323,8 @@ void UCharismaAPI::GetMessageHistory(const FString& Token, const FString& Conver
 	HttpRequest->SetURL(UCharismaAPI::BaseURL + "/play/message-history" + Query);
 
 	HttpRequest->OnProcessRequestComplete().BindLambda(
-		[SuccessCallback, ErrorCallback](const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful) {
+		[SuccessCallback, ErrorCallback](const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful)
+		{
 			if (!WasSuccessful)
 			{
 				ErrorCallback(TEXT("`/play/message-history`: Error! HTTP request was not successful."));
@@ -374,7 +380,8 @@ void UCharismaAPI::GetPlaythroughInfo(const FString& Token,
 	HttpRequest->SetURL(UCharismaAPI::BaseURL + "/play/playthrough-info");
 
 	HttpRequest->OnProcessRequestComplete().BindLambda(
-		[SuccessCallback, ErrorCallback](const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful) {
+		[SuccessCallback, ErrorCallback](const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful)
+		{
 			if (!WasSuccessful)
 			{
 				ErrorCallback(TEXT("`/play/playthrough-info`: Error! HTTP request was not successful."));
@@ -413,6 +420,63 @@ void UCharismaAPI::GetPlaythroughInfo(const FString& Token,
 			}
 
 			SuccessCallback(PlaythroughInfo);
+		});
+
+	HttpRequest->ProcessRequest();
+}
+
+void UCharismaAPI::ForkPlaythrough(const FString& Token,
+	const TFunction<void(const FString NewToken, const FString PlaythroughUuid)>& SuccessCallback,
+	const TFunction<void(const FString Error)>& ErrorCallback)
+{
+	FHttpModule* HttpModule = &FHttpModule::Get();
+	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> HttpRequest = HttpModule->CreateRequest();
+
+	HttpRequest->SetVerb("POST");
+	HttpRequest->SetHeader("Authorization", "Bearer " + Token);
+	HttpRequest->SetURL(UCharismaAPI::BaseURL + "/play/fork-playthrough");
+
+	HttpRequest->OnProcessRequestComplete().BindLambda(
+		[SuccessCallback, ErrorCallback](const FHttpRequestPtr Request, const FHttpResponsePtr Response, const bool WasSuccessful)
+		{
+			if (!WasSuccessful)
+			{
+				ErrorCallback(TEXT("`/play/fork-playthrough`: Error! HTTP request was not successful."));
+				return;
+			}
+
+			const int32 ResponseCode = Response->GetResponseCode();
+			const FString Content = Response->GetContentAsString();
+
+			if (ResponseCode != 200)
+			{
+				const FString ErrorMessage = FString::Printf(
+					TEXT("`/play/fork-playthrough`: Error! (Response code: %s): %s"), *FString::FromInt(ResponseCode), *Content);
+				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+				ErrorCallback(ErrorMessage);
+
+				return;
+			}
+
+			TSharedPtr<FJsonObject> ResponseData = MakeShareable(new FJsonObject);
+
+			const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Content);
+			if (!FJsonSerializer::Deserialize(Reader, ResponseData))
+			{
+				TArray<FStringFormatArg> Args;
+				Args.Add(FStringFormatArg(Content));
+				FString ErrorMessage =
+					FString::Format(TEXT("`/play/fork-playthrough`: Error! Failed to deserialize response data: {0}"), Args);
+
+				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+				ErrorCallback(ErrorMessage);
+				return;
+			}
+
+			const FString NewToken = ResponseData->GetStringField(TEXT("token"));
+			const FString NewPlaythroughUuid = ResponseData->GetStringField(TEXT("playthroughUuid"));
+
+			SuccessCallback(NewToken, NewPlaythroughUuid);
 		});
 
 	HttpRequest->ProcessRequest();
