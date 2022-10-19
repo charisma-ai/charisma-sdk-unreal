@@ -3,6 +3,7 @@
 #include "CharismaAPI.h"
 #include "Json.h"
 #include "JsonUtilities.h"
+#include "CharismaLogger.h"
 
 #include <nlohmann/json.hpp>
 #include <sstream>
@@ -34,7 +35,7 @@ void UPlaythrough::FirePing()
 	PingCount++;
 	if (PingCount >= MinimumPingsToConsiderFailed)
 	{
-		UCharismaAPI::Log(1, "Ping timed out", ECharismaLogSeverity::Error);
+		CharismaLogger::Log(1, "Ping timed out", CharismaLogger::Error);
 
 		OnPingFailure.Broadcast();
 	}
@@ -46,13 +47,13 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 
 	this->RoomInstance = Room;
 
-	UCharismaAPI::Log(1, "Connected.", Info);
+	CharismaLogger::Log(1, "Connected.", CharismaLogger::Info);
 
 	OnConnected.Broadcast(true);
 	OnReady.Broadcast();
 
-	this->RoomInstance->OnMessage(
-		"status", [](const msgpack::object& message) { UCharismaAPI::Log(-1, TEXT("Ready to begin playing."), Info); });
+	this->RoomInstance->OnMessage("status",
+		[](const msgpack::object& message) { CharismaLogger::Log(-1, TEXT("Ready to begin playing."), CharismaLogger::Info); });
 
 	this->RoomInstance->OnMessage("message",
 		[this](const msgpack::object& message)
@@ -82,7 +83,7 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 				this->bIsPlaying = false;
 			}
 
-			UCharismaAPI::Log(-1, Event.Message.Character.Name + TEXT(": ") + Event.Message.Text, Info);
+			CharismaLogger::Log(-1, Event.Message.Character.Name + TEXT(": ") + Event.Message.Text, CharismaLogger::Info);
 
 			this->SaveEmotionsMemories(Event.Emotions, Event.Memories);
 			OnMessage.Broadcast(Event);
@@ -96,7 +97,7 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 		{
 			FCharismaErrorEvent Event = message.as<FCharismaErrorEvent>();
 
-			UCharismaAPI::Log(-1, Event.Error, ECharismaLogSeverity::Error);
+			CharismaLogger::Log(-1, Event.Error, CharismaLogger::Error);
 
 			OnError.Broadcast(Event);
 		});
@@ -108,8 +109,8 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 			OnPingSuccess.Broadcast();
 		});
 
-	this->RoomInstance->OnMessage("speech-recognition-error",
-		[this](const msgpack::object& message) { UCharismaAPI::Log(-1, TEXT("Speech recognition error"), Error); });
+	this->RoomInstance->OnMessage("speech-recognition-error", [this](const msgpack::object& message)
+		{ CharismaLogger::Log(-1, TEXT("Speech recognition error"), CharismaLogger::Error); });
 	this->RoomInstance->OnMessage("speech-recognition-result",
 		[this](const msgpack::object& message)
 		{
@@ -127,7 +128,7 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 			});
 
 	this->RoomInstance->OnError =
-		([this](int32 StatusCode, const FString& Error) { UCharismaAPI::Log(-1, Error, ECharismaLogSeverity::Error); });
+		([this](int32 StatusCode, const FString& Error) { CharismaLogger::Log(-1, Error, CharismaLogger::Error); });
 
 #if ENGINE_MAJOR_VERSION < 5
 	UWorld* World = GEngine->GetWorldFromContextObject(CurWorldContextObject);
@@ -149,7 +150,7 @@ void UPlaythrough::Connect()
 	}
 
 	ClientInstance = MakeShared<Client>(UCharismaAPI::SocketURL);
-	UCharismaAPI::Log(1, "Connecting...", Info);
+	CharismaLogger::Log(1, "Connecting...", CharismaLogger::Info);
 	ClientInstance->JoinOrCreate<void>("chat",
 		{{"token", FStringToStdString(CurToken)}, {"playthroughId", FStringToStdString(CurPlaythroughUuid)},
 			{"sdkInfo", UPlaythrough::SdkInfo}},
@@ -185,7 +186,7 @@ void UPlaythrough::Action(const FString& ConversationUuid, const FString& Action
 {
 	if (!RoomInstance)
 	{
-		UCharismaAPI::Log(6, "Charisma must be connected to before sending events.", Warning, 5.f);
+		CharismaLogger::Log(6, "Charisma must be connected to before sending events.", CharismaLogger::Warning);
 		return;
 	}
 
@@ -206,7 +207,7 @@ void UPlaythrough::Start(const FString& ConversationUuid, const int32 SceneIndex
 {
 	if (!RoomInstance)
 	{
-		UCharismaAPI::Log(6, "Charisma must be connected to before sending events.", Warning, 5.f);
+		CharismaLogger::Log(6, "Charisma must be connected to before sending events.", CharismaLogger::Warning);
 		return;
 	}
 
@@ -243,7 +244,7 @@ void UPlaythrough::Tap(const FString& ConversationUuid) const
 {
 	if (!RoomInstance)
 	{
-		UCharismaAPI::Log(6, "Charisma must be connected to before sending events.", Warning, 5.f);
+		CharismaLogger::Log(6, "Charisma must be connected to before sending events.", CharismaLogger::Warning);
 		return;
 	}
 
@@ -262,7 +263,7 @@ void UPlaythrough::Reply(const FString& ConversationUuid, const FString& Message
 {
 	if (!RoomInstance)
 	{
-		UCharismaAPI::Log(6, "Charisma must be connected to before sending events.", Warning, 5.f);
+		CharismaLogger::Log(6, "Charisma must be connected to before sending events.", CharismaLogger::Warning);
 		return;
 	}
 
@@ -282,7 +283,7 @@ void UPlaythrough::Resume(const FString& ConversationUuid) const
 {
 	if (!RoomInstance)
 	{
-		UCharismaAPI::Log(6, "Charisma must be connected to before sending events.", Warning, 5.f);
+		CharismaLogger::Log(6, "Charisma must be connected to before sending events.", CharismaLogger::Warning);
 		return;
 	}
 
@@ -335,7 +336,7 @@ void UPlaythrough::StartSpeechRecognition(bool& bWasSuccessful)
 {
 	if (!RoomInstance)
 	{
-		UCharismaAPI::Log(6, "Charisma must be connected to before sending events.", Warning, 5.f);
+		CharismaLogger::Log(6, "Charisma must be connected to before sending events.", CharismaLogger::Warning);
 		return;
 	}
 
@@ -362,7 +363,7 @@ void UPlaythrough::StopSpeechRecognition()
 {
 	if (!RoomInstance)
 	{
-		UCharismaAPI::Log(6, "Charisma must be connected to before sending events.", Warning, 5.f);
+		CharismaLogger::Log(6, "Charisma must be connected to before sending events.", CharismaLogger::Warning);
 		return;
 	}
 
@@ -381,7 +382,7 @@ void UPlaythrough::ReconnectionFlow()
 		return;
 	}
 
-	UCharismaAPI::Log(1, "Reconnecting...", Info);
+	CharismaLogger::Log(1, "Reconnecting...", CharismaLogger::Info);
 
 	ClientInstance->JoinById<void>(RoomInstance->Id, {{"sessionId", FStringToStdString(RoomInstance->SessionId)}},
 		[this](TSharedPtr<MatchMakeError> Error, TSharedPtr<Room<void>> Room)

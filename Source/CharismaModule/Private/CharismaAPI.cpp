@@ -1,5 +1,6 @@
 #include "CharismaAPI.h"
 
+#include "CharismaLogger.h"
 #include "Json.h"
 #include "JsonUtilities.h"
 #include "Playthrough.h"
@@ -29,34 +30,6 @@ FString UCharismaAPI::ToQueryString(const TMap<FString, FString>& QueryParams)
 	return Result;
 }
 
-void UCharismaAPI::Log(const int32 Key, const FString& Message, const ECharismaLogSeverity Severity, const float Duration)
-{
-	FColor MessageColor;
-	switch (Severity)
-	{
-		case Info:
-			MessageColor = FColor::Green;
-			UE_LOG(LogTemp, Log, TEXT("Charisma: %s"), *Message);
-			break;
-		case Warning:
-			MessageColor = FColor::Orange;
-			UE_LOG(LogTemp, Warning, TEXT("Charisma: %s"), *Message);
-			break;
-		case Error:
-			MessageColor = FColor::Red;
-			UE_LOG(LogTemp, Error, TEXT("Charisma: %s"), *Message);
-			break;
-		default:
-			MessageColor = FColor::White;
-			UE_LOG(LogTemp, Log, TEXT("Charisma: %s"), *Message);
-	}
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(Key, Duration, MessageColor, FString("Charisma: " + Message));
-	}
-}
-
 void UCharismaAPI::CreatePlaythroughToken(const int32 StoryId, const int32 StoryVersion, const FString& ApiKey,
 	const TFunction<void(const FString Token, const FString PlaythroughUuid)>& SuccessCallback,
 	const TFunction<void(const FString Error)>& ErrorCallback)
@@ -84,7 +57,8 @@ void UCharismaAPI::CreatePlaythroughToken(const int32 StoryId, const int32 Story
 		}
 		else
 		{
-			Log(-3, "An API key must be provided to create a playthrough token for the draft story version.", Error);
+			CharismaLogger::Log(-3, "An API key must be provided to create a playthrough token for the draft story version.",
+				CharismaLogger::Error);
 		}
 	}
 
@@ -107,12 +81,10 @@ void UCharismaAPI::CreatePlaythroughToken(const int32 StoryId, const int32 Story
 
 			if (ResponseCode != 200)
 			{
-				TArray<FStringFormatArg> Args;
-				Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
-				Args.Add(FStringFormatArg(Content));
-				FString ErrorMessage = FString::Format(TEXT("`/play/token`: Error! (Response code: {0}): {1}"), Args);
+				FString ErrorMessage =
+					FString::Printf(TEXT("`/play/token`: Error! (Response code: %d): %s"), ResponseCode, *Content);
 
-				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+				CharismaLogger::Log(-2, ErrorMessage, CharismaLogger::Error);
 				ErrorCallback(ErrorMessage);
 
 				return;
@@ -123,12 +95,10 @@ void UCharismaAPI::CreatePlaythroughToken(const int32 StoryId, const int32 Story
 			const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Content);
 			if (!FJsonSerializer::Deserialize(Reader, ResponseData))
 			{
-				TArray<FStringFormatArg> Args;
-				Args.Add(FStringFormatArg(Content));
 				FString ErrorMessage =
-					FString::Format(TEXT("`/play/token`: Error! Failed to deserialize response data: {0}"), Args);
+					FString::Printf(TEXT("`/play/token`: Error! Failed to deserialize response data: %s"), *Content);
 
-				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+				CharismaLogger::Log(-2, ErrorMessage, CharismaLogger::Error);
 				ErrorCallback(ErrorMessage);
 				return;
 			}
@@ -165,12 +135,10 @@ void UCharismaAPI::CreateConversation(const FString& Token, const TFunction<void
 
 			if (ResponseCode != 200)
 			{
-				TArray<FStringFormatArg> Args;
-				Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
-				Args.Add(FStringFormatArg(Content));
-				FString ErrorMessage = FString::Format(TEXT("`/play/conversation`: Error! (Response code: {0}): {1}"), Args);
+				FString ErrorMessage =
+					FString::Printf(TEXT("`/play/conversation`: Error! (Response code: %d): %s"), ResponseCode, *Content);
 
-				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+				CharismaLogger::Log(-2, ErrorMessage, CharismaLogger::Error);
 				ErrorCallback(ErrorMessage);
 
 				return;
@@ -181,12 +149,10 @@ void UCharismaAPI::CreateConversation(const FString& Token, const TFunction<void
 			const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Content);
 			if (!FJsonSerializer::Deserialize(Reader, ResponseData))
 			{
-				TArray<FStringFormatArg> Args;
-				Args.Add(FStringFormatArg(Content));
 				FString ErrorMessage =
-					FString::Format(TEXT("`/play/conversation`: Error! Failed to deserialize response data: {0}"), Args);
+					FString::Printf(TEXT("`/play/conversation`: Error! Failed to deserialize response data: %s"), *Content);
 
-				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+				CharismaLogger::Log(-2, ErrorMessage, CharismaLogger::Error);
 				ErrorCallback(ErrorMessage);
 				return;
 			}
@@ -232,12 +198,10 @@ void UCharismaAPI::SetMemory(const FString& Token, const FString& RecallValue, c
 
 			if (ResponseCode != 200)
 			{
-				TArray<FStringFormatArg> Args;
-				Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
-				Args.Add(FStringFormatArg(Content));
-				FString ErrorMessage = FString::Format(TEXT("`/play/set-memory`: Error! (Response code: {0}): {1}"), Args);
+				FString ErrorMessage =
+					FString::Printf(TEXT("`/play/set-memory`: Error! (Response code: %d): %s"), ResponseCode, *Content);
 
-				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+				CharismaLogger::Log(-2, ErrorMessage, CharismaLogger::Error);
 				ErrorCallback(ErrorMessage);
 
 				return;
@@ -282,12 +246,10 @@ void UCharismaAPI::RestartFromEventId(const FString& TokenForRestart, const int6
 
 			if (ResponseCode != 200)
 			{
-				TArray<FStringFormatArg> Args;
-				Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
-				Args.Add(FStringFormatArg(Content));
-				FString ErrorMessage = FString::Format(TEXT("`/play/restart-from-event`: Error! (Response code: {0}): {1}"), Args);
+				FString ErrorMessage =
+					FString::Printf(TEXT("`/play/restart-from-event`: Error! (Response code: %d): %s"), ResponseCode, *Content);
 
-				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+				CharismaLogger::Log(-2, ErrorMessage, CharismaLogger::Error);
 				ErrorCallback(ErrorMessage);
 
 				return;
@@ -336,12 +298,10 @@ void UCharismaAPI::GetMessageHistory(const FString& Token, const FString& Conver
 
 			if (ResponseCode != 200)
 			{
-				TArray<FStringFormatArg> Args;
-				Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
-				Args.Add(FStringFormatArg(Content));
-				FString ErrorMessage = FString::Format(TEXT("`/play/message-history`: Error! (Response code: {0}): {1}"), Args);
+				FString ErrorMessage =
+					FString::Printf(TEXT("`/play/message-history`: Error! (Response code: %d): %s"), ResponseCode, *Content);
 
-				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+				CharismaLogger::Log(-2, ErrorMessage, CharismaLogger::Error);
 				ErrorCallback(ErrorMessage);
 
 				return;
@@ -352,12 +312,10 @@ void UCharismaAPI::GetMessageHistory(const FString& Token, const FString& Conver
 			FCharismaMessageHistoryResponse MessageHistory;
 			if (!FJsonObjectConverter::JsonObjectStringToUStruct(Content, &MessageHistory, 0, 0))
 			{
-				TArray<FStringFormatArg> Args;
-				Args.Add(FStringFormatArg(Content));
 				FString ErrorMessage =
-					FString::Format(TEXT("`/play/message-history`: Error! Failed to deserialize response data: {0}"), Args);
+					FString::Printf(TEXT("`/play/message-history`: Error! Failed to deserialize response data: %s"), *Content);
 
-				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+				CharismaLogger::Log(-2, ErrorMessage, CharismaLogger::Error);
 				ErrorCallback(ErrorMessage);
 				return;
 			}
@@ -393,12 +351,10 @@ void UCharismaAPI::GetPlaythroughInfo(const FString& Token,
 
 			if (ResponseCode != 200)
 			{
-				TArray<FStringFormatArg> Args;
-				Args.Add(FStringFormatArg(FString::FromInt(ResponseCode)));
-				Args.Add(FStringFormatArg(Content));
-				FString ErrorMessage = FString::Format(TEXT("`/play/playthrough-info`: Error! (Response code: {0}): {1}"), Args);
+				FString ErrorMessage =
+					FString::Printf(TEXT("`/play/playthrough-info`: Error! (Response code: %d): %s"), ResponseCode, *Content);
 
-				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+				CharismaLogger::Log(-2, ErrorMessage, CharismaLogger::Error);
 				ErrorCallback(ErrorMessage);
 
 				return;
@@ -409,12 +365,10 @@ void UCharismaAPI::GetPlaythroughInfo(const FString& Token,
 			FCharismaPlaythroughInfoResponse PlaythroughInfo;
 			if (!FJsonObjectConverter::JsonObjectStringToUStruct(Content, &PlaythroughInfo, 0, 0))
 			{
-				TArray<FStringFormatArg> Args;
-				Args.Add(FStringFormatArg(Content));
 				FString ErrorMessage =
-					FString::Format(TEXT("`/play/playthrough-info`: Error! Failed to deserialize response data: {0}"), Args);
+					FString::Printf(TEXT("`/play/playthrough-info`: Error! Failed to deserialize response data: %s"), *Content);
 
-				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+				CharismaLogger::Log(-2, ErrorMessage, CharismaLogger::Error);
 				ErrorCallback(ErrorMessage);
 				return;
 			}
@@ -451,8 +405,8 @@ void UCharismaAPI::ForkPlaythrough(const FString& Token,
 			if (ResponseCode != 200)
 			{
 				const FString ErrorMessage = FString::Printf(
-					TEXT("`/play/fork-playthrough`: Error! (Response code: %s): %s"), *FString::FromInt(ResponseCode), *Content);
-				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+					TEXT("`/play/fork-playthrough`: Error! (Response code: %d): %s"), ResponseCode, *Content);
+				CharismaLogger::Log(-2, ErrorMessage, CharismaLogger::Error);
 				ErrorCallback(ErrorMessage);
 
 				return;
@@ -463,12 +417,10 @@ void UCharismaAPI::ForkPlaythrough(const FString& Token,
 			const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Content);
 			if (!FJsonSerializer::Deserialize(Reader, ResponseData))
 			{
-				TArray<FStringFormatArg> Args;
-				Args.Add(FStringFormatArg(Content));
 				FString ErrorMessage =
-					FString::Format(TEXT("`/play/fork-playthrough`: Error! Failed to deserialize response data: {0}"), Args);
+					FString::Printf(TEXT("`/play/fork-playthrough`: Error! Failed to deserialize response data: %s"), *Content);
 
-				UCharismaAPI::Log(-2, ErrorMessage, Error, 5.f);
+				CharismaLogger::Log(-2, ErrorMessage, CharismaLogger::Error);
 				ErrorCallback(ErrorMessage);
 				return;
 			}

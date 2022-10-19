@@ -8,13 +8,6 @@
 
 #include "CharismaAPI.generated.h"
 
-enum ECharismaLogSeverity
-{
-	Info,
-	Warning,
-	Error
-};
-
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class CHARISMAMODULE_API UCharismaAPI : public UObject
 {
@@ -25,8 +18,6 @@ public:
 	static const FString SocketURL;
 
 	static FString ToQueryString(const TMap<FString, FString>& QueryParams);
-
-	static void Log(const int32 Key, const FString& Message, const ECharismaLogSeverity Severity, const float Duration = 5.f);
 
 	static void CreatePlaythroughToken(const int32 StoryId, const int32 StoryVersion, const FString& ApiKey,
 		const TFunction<void(const FString Token, const FString PlaythroughUuid)>& SuccessCallback,
