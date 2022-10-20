@@ -85,7 +85,9 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 
 			CharismaLogger::Log(-1, Event.Message.Character.Name + TEXT(": ") + Event.Message.Text, CharismaLogger::Info);
 
-			this->SaveEmotionsMemories(Event.Emotions, Event.Memories);
+			this->PlaythroughEmotions = Event.Emotions;
+			this->PlaythroughMemories = Event.Memories;
+
 			OnMessage.Broadcast(Event);
 		});
 
@@ -324,12 +326,6 @@ SpeechConfig UPlaythrough::GetSpeechConfig(const ECharismaSpeechAudioFormat Audi
 	}
 	speechConfig.output = "buffer";
 	return speechConfig;
-}
-
-void UPlaythrough::SaveEmotionsMemories(const TArray<FCharismaEmotion>& Emotions, const TArray<FCharismaMemory>& Memories)
-{
-	PlaythroughEmotions = Emotions;
-	PlaythroughMemories = Memories;
 }
 
 void UPlaythrough::StartSpeechRecognition(bool& bWasSuccessful)

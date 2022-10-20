@@ -21,16 +21,16 @@ public:
 	// Sets default values for this component's properties
 	UCharismaActorComponent();
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Charisma|ActorComponent")
 	FString CharacterName;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Charisma|ActorComponent")
 	bool bPlayAudio = false;
 
 	UPROPERTY()
 	UAudioComponent* CharacterAudioComponent;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "Charisma|ActorComponent")
 	TArray<FCharismaEmotion> CharacterEmotions;
 
 	UPROPERTY()

@@ -11,7 +11,7 @@
 
 #include "Playthrough.generated.h"
 
-UENUM(BlueprintType, Category = "Charisma Playthrough")
+UENUM(BlueprintType, Category = "Charisma|Playthrough")
 enum class ECharismaSpeechAudioFormat : uint8
 {
 	None UMETA(DisplayName = "No speech"),
@@ -43,46 +43,82 @@ public:
 
 	// Member
 
-	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
+	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough")
 	static UPlaythrough* NewPlaythroughObject(UObject* WorldContextObject, const FString& Token, const FString& PlaythroughUuid);
 
 	static const nlohmann::json SdkInfo;
 
-	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
+	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough")
 	void Connect();
 
-	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
+	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough")
 	void Disconnect();
 
-	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
+	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
 	void Action(const FString& ConversationUuid, const FString& ActionName) const;
 
-	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
+	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
 	void Start(const FString& ConversationUuid, const int32 SceneIndex, const int32 StartGraphId,
 		const FString& StartGraphReferenceId,
 		const ECharismaSpeechAudioFormat SpeechAudioFormat = ECharismaSpeechAudioFormat::None);
 
-	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
+	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
 	void Reply(const FString& ConversationUuid, const FString& Message) const;
 
-	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
+	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
 	void Resume(const FString& ConversationUuid) const;
 
-	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
+	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
 	void Tap(const FString& ConversationUuid) const;
 
-	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
+	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
 	void ToggleSpeech(const ECharismaSpeechAudioFormat AudioFormat);
 
-	UFUNCTION()
-	void SaveEmotionsMemories(const TArray<FCharismaEmotion>& Emotions, const TArray<FCharismaMemory>& Memories);
-
-	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
+	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
 	void StartSpeechRecognition(bool& bWasSuccessful);
 
-	UFUNCTION(BlueprintCallable, Category = "Charisma Playthrough")
+	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
 	void StopSpeechRecognition();
 
+	// Events
+
+	UPROPERTY(BlueprintAssignable, Category = "Charisma|Playthrough Events")
+	FConnectionDelegate OnConnected;
+
+	UPROPERTY(BlueprintAssignable, Category = "Charisma|Playthrough Events")
+	FMessageDelegate OnMessage;
+
+	UPROPERTY(BlueprintAssignable, Category = "Charisma|Playthrough Events")
+	FErrorDelegate OnError;
+
+	UPROPERTY(BlueprintAssignable, Category = "Charisma|Playthrough Events")
+	FReadyDelegate OnReady;
+
+	UPROPERTY(BlueprintAssignable, Category = "Charisma|Playthrough Events")
+	FTypingDelegate OnTyping;
+
+	UPROPERTY(BlueprintAssignable, Category = "Charisma|Playthrough Events")
+	FPingSuccessDelegate OnPingSuccess;
+
+	UPROPERTY(BlueprintAssignable, Category = "Charisma|Playthrough Events")
+	FPingFailureDelegate OnPingFailure;
+
+	UPROPERTY(BlueprintAssignable, Category = "Charisma|Playthrough Events")
+	FSpeechRecognitionResultDelegate OnSpeechRecognitionResult;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Charisma|Playthrough")
+	TArray<FCharismaEmotion> PlaythroughEmotions;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Charisma|Playthrough")
+	TArray<FCharismaMemory> PlaythroughMemories;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Charisma|Playthrough")
+	float TimeBetweenPings = 2.0f;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Charisma|Playthrough")
+	uint8 MinimumPingsToConsiderFailed = 3;
+
+private:
 	UFUNCTION()
 	void ReconnectionFlow();
 
@@ -92,53 +128,14 @@ public:
 	UFUNCTION()
 	void ReconnectionDelay();
 
-	// Events
+	UFUNCTION()
+	void FirePing();
 
-	UPROPERTY(BlueprintAssignable, Category = Events)
-	FConnectionDelegate OnConnected;
-
-	UPROPERTY(BlueprintAssignable, Category = Events)
-	FMessageDelegate OnMessage;
-
-	UPROPERTY(BlueprintAssignable, Category = Events)
-	FErrorDelegate OnError;
-
-	UPROPERTY(BlueprintAssignable, Category = Events)
-	FReadyDelegate OnReady;
-
-	UPROPERTY(BlueprintAssignable, Category = Events)
-	FTypingDelegate OnTyping;
-
-	UPROPERTY(BlueprintAssignable, Category = Events)
-	FPingSuccessDelegate OnPingSuccess;
-
-	UPROPERTY(BlueprintAssignable, Category = Events)
-	FPingFailureDelegate OnPingFailure;
-
-	UPROPERTY(BlueprintAssignable, Category = Events)
-	FSpeechRecognitionResultDelegate OnSpeechRecognitionResult;
-
-	UPROPERTY(BlueprintReadWrite)
-	TArray<FCharismaEmotion> PlaythroughEmotions;
-
-	UPROPERTY(BlueprintReadWrite)
-	TArray<FCharismaMemory> PlaythroughMemories;
-
-	UPROPERTY(BlueprintReadWrite)
-	float TimeBetweenPings = 2.0f;
-
-	UPROPERTY(BlueprintReadWrite)
-	uint8 MinimumPingsToConsiderFailed = 3;
-
-private:
 	// Member
 
 	SpeechConfig GetSpeechConfig(const ECharismaSpeechAudioFormat AudioFormat) const;
 
 	void OnRoomJoined(TSharedPtr<Room<void>> Room);
-
-	UFUNCTION()
-	void FirePing();
 
 	// Properties
 

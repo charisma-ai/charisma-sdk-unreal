@@ -12,6 +12,6 @@ class CHARISMAMODULE_API UCharismaGameModeComponent : public UActorComponent
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite, Category = "Charisma|GameMode")
 	UPlaythrough* Playthrough;
 };
