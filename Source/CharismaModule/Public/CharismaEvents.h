@@ -2,12 +2,18 @@
 
 #include "ColyseusUtils.h"
 
+#include "HAL/Platform.h"
+
+#if PLATFORM_WINDOWS
+#include "Windows/WindowsHWrapper.h"
+#endif
+
+THIRD_PARTY_INCLUDES_START
 #pragma push_macro("check")
 #undef check
-
 #include <msgpack.hpp>
-
 #pragma pop_macro("check")
+THIRD_PARTY_INCLUDES_END
 
 #include "CharismaEvents.generated.h"
 

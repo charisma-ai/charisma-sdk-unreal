@@ -4,6 +4,7 @@
 #include "Json.h"
 #include "JsonUtilities.h"
 #include "CharismaLogger.h"
+#include "TimerManager.h"
 
 #include <nlohmann/json.hpp>
 #include <sstream>

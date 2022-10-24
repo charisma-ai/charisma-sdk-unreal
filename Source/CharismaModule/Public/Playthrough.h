@@ -8,6 +8,7 @@
 #include "MicrophoneCapture.h"
 #include "Room.h"
 #include "UObject/NoExportTypes.h"
+#include "Engine/EngineTypes.h"
 
 #include "Playthrough.generated.h"
 

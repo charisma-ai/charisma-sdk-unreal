@@ -9,6 +9,7 @@
 #include "Playthrough.h"
 #include "RuntimeAudioImporterLibrary.h"
 #include "Components/AudioComponent.h"
+#include "Engine/EngineTypes.h"
 
 #include "CharismaActorComponent.generated.h"
 
