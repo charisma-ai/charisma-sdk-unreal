@@ -1,3 +1,5 @@
+// Copyright 2022 Charisma Entertainment Ltd
+
 #pragma once
 
 #include "CharismaEvents.h"

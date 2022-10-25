@@ -1,3 +1,5 @@
+// Copyright 2022 Charisma Entertainment Ltd
+
 #include "APIBlueprints/CreatePlaythroughToken.h"
 
 UCreatePlaythroughToken::UCreatePlaythroughToken(const FObjectInitializer& ObjectInitializer)

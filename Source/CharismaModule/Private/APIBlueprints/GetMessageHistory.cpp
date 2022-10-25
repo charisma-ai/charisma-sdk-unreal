@@ -1,3 +1,5 @@
+// Copyright 2022 Charisma Entertainment Ltd
+
 #include "APIBlueprints/GetMessageHistory.h"
 
 UGetMessageHistory::UGetMessageHistory(const FObjectInitializer& ObjectInitializer)

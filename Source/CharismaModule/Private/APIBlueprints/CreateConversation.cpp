@@ -1,3 +1,5 @@
+// Copyright 2022 Charisma Entertainment Ltd
+
 #include "APIBlueprints/CreateConversation.h"
 
 UCreateConversation::UCreateConversation(const FObjectInitializer& ObjectInitializer)

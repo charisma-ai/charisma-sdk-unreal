@@ -1,3 +1,5 @@
+// Copyright 2022 Charisma Entertainment Ltd
+
 #include "CharismaModule.h"
 
 #define LOCTEXT_NAMESPACE "FCharismaModule"

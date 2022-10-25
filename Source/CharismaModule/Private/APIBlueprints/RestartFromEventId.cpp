@@ -1,3 +1,5 @@
+// Copyright 2022 Charisma Entertainment Ltd
+
 #include "APIBlueprints/RestartFromEventId.h"
 
 URestartFromEventId::URestartFromEventId(const FObjectInitializer& ObjectInitializer)

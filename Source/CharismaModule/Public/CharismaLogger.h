@@ -1,3 +1,5 @@
+// Copyright 2022 Charisma Entertainment Ltd
+
 #pragma once
 
 DECLARE_LOG_CATEGORY_EXTERN(LogCharisma, Log, All);

@@ -1,3 +1,5 @@
+// Copyright 2022 Charisma Entertainment Ltd
+
 #include "MicrophoneCapture.h"
 
 #include "Voice.h"

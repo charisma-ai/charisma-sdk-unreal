@@ -1,3 +1,5 @@
+// Copyright 2022 Charisma Entertainment Ltd
+
 #include "APIBlueprints/GetPlaythroughInfo.h"
 
 UGetPlaythroughInfo::UGetPlaythroughInfo(const FObjectInitializer& ObjectInitializer)
