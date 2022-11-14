@@ -331,7 +331,7 @@ SpeechConfig UPlaythrough::GetSpeechConfig(const ECharismaSpeechAudioFormat Audi
 	return speechConfig;
 }
 
-void UPlaythrough::StartSpeechRecognition(bool& bWasSuccessful)
+void UPlaythrough::StartSpeechRecognition(const ECharismaSpeechRecognitionAWSLanguageCode LanguageCode, bool& bWasSuccessful)
 {
 	if (!RoomInstance)
 	{
@@ -353,6 +353,11 @@ void UPlaythrough::StartSpeechRecognition(bool& bWasSuccessful)
 	{
 		SpeechRecognitionStartPayload payload;
 		payload.service = FStringToStdString(TEXT("aws"));
+
+		SpeechRecognitionStartServiceOptionsAWS serviceOptions;
+		FText DisplayValue = UEnum::GetDisplayValueAsText(LanguageCode);
+		serviceOptions.LanguageCode = FStringToStdString(DisplayValue.ToString());
+		payload.serviceOptions = serviceOptions;
 
 		RoomInstance->Send("speech-recognition-start", payload);
 	}

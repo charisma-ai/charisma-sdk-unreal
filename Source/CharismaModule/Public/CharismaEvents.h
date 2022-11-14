@@ -511,8 +511,14 @@ struct ResumePayload
 	MSGPACK_DEFINE_MAP(conversationUuid, speechConfig);
 };
 
+struct SpeechRecognitionStartServiceOptionsAWS
+{
+	std::string LanguageCode;
+};
+
 struct SpeechRecognitionStartPayload
 {
 	std::string service;
+	TOptional<SpeechRecognitionStartServiceOptionsAWS> serviceOptions;
 	MSGPACK_DEFINE_MAP(service);
 };

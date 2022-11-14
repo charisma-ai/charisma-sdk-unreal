@@ -24,6 +24,23 @@ enum class ECharismaSpeechAudioFormat : uint8
 	Ogg UMETA(DisplayName = "ogg")
 };
 
+UENUM(BlueprintType, Category = "Charisma|Playthrough")
+enum class ECharismaSpeechRecognitionAWSLanguageCode : uint8
+{
+	DE_DE UMETA(DisplayName = "de-DE"),
+	EN_AU UMETA(DisplayName = "en-AU"),
+	EN_GB UMETA(DisplayName = "en-GB"),
+	EN_US UMETA(DisplayName = "en-US"),
+	ES_US UMETA(DisplayName = "es-US"),
+	FR_CA UMETA(DisplayName = "fr-CA"),
+	FR_FR UMETA(DisplayName = "fr-FR"),
+	IT_IT UMETA(DisplayName = "it-IT"),
+	JA_JP UMETA(DisplayName = "ja-JP"),
+	KO_KR UMETA(DisplayName = "ko-KR"),
+	PT_BR UMETA(DisplayName = "pt-BR"),
+	ZH_CN UMETA(DisplayName = "zh-CN"),
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageHistoryDelegate, const FCharismaMessageHistoryResponse&, MessageHistory);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlaythroughInfoDelegate, const FCharismaPlaythroughInfoResponse&, PlaythroughInfo);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FConnectionDelegate, bool, IsConnected);
@@ -78,7 +95,7 @@ public:
 	void ToggleSpeech(const ECharismaSpeechAudioFormat AudioFormat);
 
 	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
-	void StartSpeechRecognition(bool& bWasSuccessful);
+	void StartSpeechRecognition(const ECharismaSpeechRecognitionAWSLanguageCode LanguageCode, bool& bWasSuccessful);
 
 	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
 	void StopSpeechRecognition();
