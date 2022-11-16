@@ -30,11 +30,9 @@ public:
 		const TFunction<void(const FString Error)>& ErrorCallback);
 
 	static void SetMemory(const FString& PlaythroughToken, const FString& RecallValue, const FString& SaveValue,
-		const TFunction<void()>& SuccessCallback,
-		const TFunction<void(const FString Error)>& ErrorCallback);
+		const TFunction<void()>& SuccessCallback, const TFunction<void(const FString Error)>& ErrorCallback);
 
-	static void RestartFromEventId(const FString& PlaythroughToken, const int64 EventId,
-		const TFunction<void()>& SuccessCallback,
+	static void RestartFromEventId(const FString& PlaythroughToken, const int64 EventId, const TFunction<void()>& SuccessCallback,
 		const TFunction<void(const FString Error)>& ErrorCallback);
 
 	static void GetMessageHistory(const FString& PlaythroughToken, const FString& ConversationUuid, const int64 MinEventId,
@@ -45,7 +43,10 @@ public:
 		const TFunction<void(const FCharismaPlaythroughInfoResponse PlaythroughInfo)>& SuccessCallback,
 		const TFunction<void(const FString Error)>& ErrorCallback);
 
-	static void ForkPlaythrough(const FString& Token,
+	static void ForkPlaythrough(const FString& PlaythroughToken,
 		const TFunction<void(const FString NewToken, const FString PlaythroughUuid)>& SuccessCallback,
+		const TFunction<void(const FString Error)>& ErrorCallback);
+
+	static void ResetPlaythrough(const FString& PlaythroughToken, const int64 EventId, const TFunction<void()>& SuccessCallback,
 		const TFunction<void(const FString Error)>& ErrorCallback);
 };
