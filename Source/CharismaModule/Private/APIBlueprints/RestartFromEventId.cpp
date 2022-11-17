@@ -7,7 +7,8 @@ URestartFromEventId::URestartFromEventId(const FObjectInitializer& ObjectInitial
 {
 }
 
-URestartFromEventId* URestartFromEventId::RestartFromEventId(UObject* WorldContextObject, const FString Token, const int64 EventId)
+URestartFromEventId* URestartFromEventId::RestartFromEventId(
+	UObject* WorldContextObject, const FString Token, const FString EventId)
 {
 	URestartFromEventId* BlueprintNode = NewObject<URestartFromEventId>();
 	BlueprintNode->WorldContextObject = WorldContextObject;

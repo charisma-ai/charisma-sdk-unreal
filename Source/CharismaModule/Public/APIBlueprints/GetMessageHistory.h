@@ -20,7 +20,7 @@ public:
 	UFUNCTION(BlueprintCallable, meta = (BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject"),
 		Category = "Charisma API")
 	static UGetMessageHistory* GetMessageHistory(
-		UObject* WorldContextObject, const FString Token, const FString ConversationUuid, const int64 EventId);
+		UObject* WorldContextObject, const FString Token, const FString ConversationUuid, const FString EventId);
 
 	virtual void Activate() override;
 
@@ -31,7 +31,7 @@ public:
 	FString ConversationUuid;
 
 	UPROPERTY()
-	int64 MinEventId;
+	FString MinEventId;
 
 private:
 	UPROPERTY(BlueprintAssignable)

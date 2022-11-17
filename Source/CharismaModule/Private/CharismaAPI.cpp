@@ -215,11 +215,12 @@ void UCharismaAPI::SetMemory(const FString& Token, const FString& RecallValue, c
 	HttpRequest->ProcessRequest();
 }
 
-void UCharismaAPI::RestartFromEventId(const FString& TokenForRestart, const int64 EventId, const TFunction<void()>& SuccessCallback,
+void UCharismaAPI::RestartFromEventId(const FString& TokenForRestart, const FString& EventId,
+	const TFunction<void()>& SuccessCallback,
 	const TFunction<void(const FString Error)>& ErrorCallback)
 {
 	TSharedPtr<FJsonObject> RequestData = MakeShareable(new FJsonObject);
-	RequestData->SetStringField("eventId", FString::Printf(TEXT("%lld"), EventId));
+	RequestData->SetStringField("eventId", EventId);
 
 	FString OutputString;
 	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
@@ -263,7 +264,7 @@ void UCharismaAPI::RestartFromEventId(const FString& TokenForRestart, const int6
 	HttpRequest->ProcessRequest();
 }
 
-void UCharismaAPI::GetMessageHistory(const FString& Token, const FString& ConversationUuid, const int64 MinEventId,
+void UCharismaAPI::GetMessageHistory(const FString& Token, const FString& ConversationUuid, const FString& MinEventId,
 	const TFunction<void(const FCharismaMessageHistoryResponse MessageHistory)>& SuccessCallback,
 	const TFunction<void(const FString Error)>& ErrorCallback)
 {
@@ -275,9 +276,9 @@ void UCharismaAPI::GetMessageHistory(const FString& Token, const FString& Conver
 	{
 		QueryParams.Add("conversationUuid", ConversationUuid);
 	}
-	if (MinEventId)
+	if (MinEventId.Len() > 0)
 	{
-		QueryParams.Add("minEventId", FString::Printf(TEXT("%lld"), MinEventId));
+		QueryParams.Add("minEventId", MinEventId);
 	}
 
 	FString Query = UCharismaAPI::ToQueryString(QueryParams);
@@ -436,11 +437,11 @@ void UCharismaAPI::ForkPlaythrough(const FString& Token,
 	HttpRequest->ProcessRequest();
 }
 
-void UCharismaAPI::ResetPlaythrough(const FString& Token, const int64 EventId, const TFunction<void()>& SuccessCallback,
+void UCharismaAPI::ResetPlaythrough(const FString& Token, const FString& EventId, const TFunction<void()>& SuccessCallback,
 	const TFunction<void(const FString Error)>& ErrorCallback)
 {
 	TSharedPtr<FJsonObject> RequestData = MakeShareable(new FJsonObject);
-	RequestData->SetStringField("eventId", FString::Printf(TEXT("%lld"), EventId));
+	RequestData->SetStringField("eventId", EventId);
 
 	FString OutputString;
 	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);

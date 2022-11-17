@@ -8,7 +8,7 @@ UGetMessageHistory::UGetMessageHistory(const FObjectInitializer& ObjectInitializ
 }
 
 UGetMessageHistory* UGetMessageHistory::GetMessageHistory(
-	UObject* WorldContextObject, const FString Token, const FString ConversationUuid, const int64 MinEventId)
+	UObject* WorldContextObject, const FString Token, const FString ConversationUuid, const FString MinEventId)
 {
 	UGetMessageHistory* BlueprintNode = NewObject<UGetMessageHistory>();
 	BlueprintNode->WorldContextObject = WorldContextObject;

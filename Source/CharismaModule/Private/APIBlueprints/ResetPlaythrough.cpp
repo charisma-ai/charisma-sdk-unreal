@@ -7,7 +7,7 @@ UResetPlaythrough::UResetPlaythrough(const FObjectInitializer& ObjectInitializer
 {
 }
 
-UResetPlaythrough* UResetPlaythrough::ResetPlaythrough(UObject* WorldContextObject, const FString Token, const int64 EventId)
+UResetPlaythrough* UResetPlaythrough::ResetPlaythrough(UObject* WorldContextObject, const FString Token, const FString EventId)
 {
 	UResetPlaythrough* BlueprintNode = NewObject<UResetPlaythrough>();
 	BlueprintNode->WorldContextObject = WorldContextObject;

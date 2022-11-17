@@ -18,7 +18,7 @@ class CHARISMAMODULE_API URestartFromEventId : public UBlueprintAsyncActionBase
 public:
 	UFUNCTION(BlueprintCallable, meta = (BlueprintInternalUseOnly = "true", WorldContext = "WorldContextObject"),
 		Category = "Charisma API")
-	static URestartFromEventId* RestartFromEventId(UObject* WorldContextObject, const FString Token, const int64 EventId);
+	static URestartFromEventId* RestartFromEventId(UObject* WorldContextObject, const FString Token, const FString EventId);
 
 	virtual void Activate() override;
 
@@ -26,7 +26,7 @@ public:
 	FString Token;
 
 	UPROPERTY()
-	int64 EventId;
+	FString EventId;
 
 private:
 	UPROPERTY(BlueprintAssignable)
