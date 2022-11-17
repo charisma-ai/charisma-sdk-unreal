@@ -95,6 +95,12 @@ public:
 	void ToggleSpeech(const ECharismaSpeechAudioFormat AudioFormat);
 
 	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
+	void Play() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
+	void Pause() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
 	void StartSpeechRecognition(const ECharismaSpeechRecognitionAWSLanguageCode LanguageCode, bool& bWasSuccessful);
 
 	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")

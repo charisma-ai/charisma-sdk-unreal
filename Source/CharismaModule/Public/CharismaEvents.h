@@ -3,7 +3,6 @@
 #pragma once
 
 #include "ColyseusUtils.h"
-
 #include "HAL/Platform.h"
 
 #if PLATFORM_WINDOWS
@@ -347,9 +346,10 @@ struct FCharismaMessageEvent
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
 	int64 Timestamp;
 
-	MSGPACK_DEFINE_MAP(MSGPACK_NVP("conversationUuid", ConversationUuid), MSGPACK_NVP("type", Type), MSGPACK_NVP("message", Message),
-		MSGPACK_NVP("endStory", EndStory), MSGPACK_NVP("tapToContinue", TapToContinue), MSGPACK_NVP("emotions", Emotions),
-		MSGPACK_NVP("memories", Memories), MSGPACK_NVP("eventId", EventId), MSGPACK_NVP("timestamp", Timestamp));
+	MSGPACK_DEFINE_MAP(MSGPACK_NVP("conversationUuid", ConversationUuid), MSGPACK_NVP("type", Type),
+		MSGPACK_NVP("message", Message), MSGPACK_NVP("endStory", EndStory), MSGPACK_NVP("tapToContinue", TapToContinue),
+		MSGPACK_NVP("emotions", Emotions), MSGPACK_NVP("memories", Memories), MSGPACK_NVP("eventId", EventId),
+		MSGPACK_NVP("timestamp", Timestamp));
 };
 
 USTRUCT(BlueprintType)
@@ -383,7 +383,6 @@ struct FCharismaMessageHistoryResponse
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
 	TArray<FCharismaMessage> Messages;
 };
-
 
 USTRUCT(BlueprintType)
 struct FCharismaSpeechRecognitionResultEventAWSResultAlternatives
@@ -460,7 +459,6 @@ struct FCharismaSpeechRecognitionResultEvent
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
 	FString Transcript;
 };
-
 
 // Events sent from client -> server
 

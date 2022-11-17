@@ -3,9 +3,9 @@
 #include "Playthrough.h"
 
 #include "CharismaAPI.h"
+#include "CharismaLogger.h"
 #include "Json.h"
 #include "JsonUtilities.h"
-#include "CharismaLogger.h"
 #include "TimerManager.h"
 
 #include <nlohmann/json.hpp>
@@ -329,6 +329,28 @@ SpeechConfig UPlaythrough::GetSpeechConfig(const ECharismaSpeechAudioFormat Audi
 	}
 	speechConfig.output = "buffer";
 	return speechConfig;
+}
+
+void UPlaythrough::Play() const
+{
+	if (!RoomInstance)
+	{
+		CharismaLogger::Log(6, "Charisma must be connected to before sending events.", CharismaLogger::Warning);
+		return;
+	}
+
+	RoomInstance->Send("play");
+}
+
+void UPlaythrough::Pause() const
+{
+	if (!RoomInstance)
+	{
+		CharismaLogger::Log(6, "Charisma must be connected to before sending events.", CharismaLogger::Warning);
+		return;
+	}
+
+	RoomInstance->Send("pause");
 }
 
 void UPlaythrough::StartSpeechRecognition(const ECharismaSpeechRecognitionAWSLanguageCode LanguageCode, bool& bWasSuccessful)
