@@ -5,12 +5,12 @@
 #include "CharismaEvents.h"
 #include "Client.h"
 #include "CoreMinimal.h"
+#include "Engine/EngineTypes.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Math/UnrealMathUtility.h"
 #include "MicrophoneCapture.h"
 #include "Room.h"
 #include "UObject/NoExportTypes.h"
-#include "Engine/EngineTypes.h"
 
 #include "Playthrough.generated.h"
 
@@ -41,13 +41,22 @@ enum class ECharismaSpeechRecognitionAWSLanguageCode : uint8
 	ZH_CN UMETA(DisplayName = "zh-CN"),
 };
 
+UENUM(BlueprintType, Category = "Charisma|Playthrough")
+enum class ECharismaPlaythroughConnectionState : uint8
+{
+	Disconnected,
+	Connecting,
+	Reconnecting,
+	Connected,
+};
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageHistoryDelegate, const FCharismaMessageHistoryResponse&, MessageHistory);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlaythroughInfoDelegate, const FCharismaPlaythroughInfoResponse&, PlaythroughInfo);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FConnectionDelegate, bool, IsConnected);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FChangeConnectionStateDelegate, ECharismaPlaythroughConnectionState, PreviousConnectionState,
+	ECharismaPlaythroughConnectionState, ConnectionState);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FTypingDelegate, bool, IsTyping);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMessageDelegate, const FCharismaMessageEvent&, MessageEvent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FErrorDelegate, const FCharismaErrorEvent&, ErrorEvent);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FReadyDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPingSuccessDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPingFailureDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSpeechRecognitionResultDelegate, const FString&, Transcript, bool, IsFinal);
@@ -63,7 +72,7 @@ public:
 
 	// Member
 
-	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough")
+	UFUNCTION(BlueprintCallable, meta = (WorldContext = "WorldContextObject"), Category = "Charisma|Playthrough")
 	static UPlaythrough* NewPlaythroughObject(UObject* WorldContextObject, const FString& Token, const FString& PlaythroughUuid);
 
 	static const nlohmann::json SdkInfo;
@@ -109,16 +118,13 @@ public:
 	// Events
 
 	UPROPERTY(BlueprintAssignable, Category = "Charisma|Playthrough Events")
-	FConnectionDelegate OnConnected;
+	FChangeConnectionStateDelegate OnChangeConnectionState;
 
 	UPROPERTY(BlueprintAssignable, Category = "Charisma|Playthrough Events")
 	FMessageDelegate OnMessage;
 
 	UPROPERTY(BlueprintAssignable, Category = "Charisma|Playthrough Events")
 	FErrorDelegate OnError;
-
-	UPROPERTY(BlueprintAssignable, Category = "Charisma|Playthrough Events")
-	FReadyDelegate OnReady;
 
 	UPROPERTY(BlueprintAssignable, Category = "Charisma|Playthrough Events")
 	FTypingDelegate OnTyping;
@@ -157,6 +163,9 @@ private:
 	UFUNCTION()
 	void FirePing();
 
+	UFUNCTION()
+	void ChangeConnectionState(ECharismaPlaythroughConnectionState NewConnectionState);
+
 	// Member
 
 	SpeechConfig GetSpeechConfig(const ECharismaSpeechAudioFormat AudioFormat) const;
@@ -181,11 +190,15 @@ private:
 
 	uint8 ReconnectionTryCount = 0;
 
+	float ReconnectionTryDelay = 5.0f;
+
+	float ReconnectionTryJitter = 3.0f;
+
 	bool bCalledByDisconnect = false;
 
-	ECharismaSpeechAudioFormat SpeechAudioFormat = ECharismaSpeechAudioFormat::None;
+	ECharismaPlaythroughConnectionState ConnectionState = ECharismaPlaythroughConnectionState::Disconnected;
 
-	bool bIsPlaying = false;
+	ECharismaSpeechAudioFormat SpeechAudioFormat = ECharismaSpeechAudioFormat::None;
 
 	TSharedPtr<UMicrophoneCapture> MicrophoneCaptureInstance;
 };

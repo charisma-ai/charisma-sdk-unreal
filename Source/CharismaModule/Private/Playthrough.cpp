@@ -40,6 +40,8 @@ void UPlaythrough::FirePing()
 	{
 		CharismaLogger::Log(1, "Ping timed out", CharismaLogger::Error);
 
+		ChangeConnectionState(ECharismaPlaythroughConnectionState::Reconnecting);
+
 		OnPingFailure.Broadcast();
 	}
 }
@@ -50,13 +52,10 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 
 	this->RoomInstance = Room;
 
-	CharismaLogger::Log(1, "Connected.", CharismaLogger::Info);
-
-	OnConnected.Broadcast(true);
-	OnReady.Broadcast();
-
 	this->RoomInstance->OnMessage("status",
-		[](const msgpack::object& message) { CharismaLogger::Log(-1, TEXT("Ready to begin playing."), CharismaLogger::Info); });
+		[this](const msgpack::object& message) {
+			ChangeConnectionState(ECharismaPlaythroughConnectionState::Connected);
+		});
 
 	this->RoomInstance->OnMessage("message",
 		[this](const msgpack::object& message)
@@ -79,11 +78,6 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 				{
 					Memory.SaveValue = Memory.SaveValue_Optional.GetValue();
 				}
-			}
-
-			if (Event.EndStory)
-			{
-				this->bIsPlaying = false;
 			}
 
 			CharismaLogger::Log(-1, Event.Message.Character.Name + TEXT(": ") + Event.Message.Text, CharismaLogger::Info);
@@ -112,6 +106,7 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 		{
 			PingCount = 0;
 			OnPingSuccess.Broadcast();
+			ChangeConnectionState(ECharismaPlaythroughConnectionState::Connected);
 		});
 
 	this->RoomInstance->OnMessage("speech-recognition-error", [this](const msgpack::object& message)
@@ -128,34 +123,31 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 		});
 
 	this->RoomInstance->OnLeave = ([this](int32 StatusCode) {
-				OnConnected.Broadcast(false);
 				this->ReconnectionFlow();
 			});
 
 	this->RoomInstance->OnError =
 		([this](int32 StatusCode, const FString& Error) { CharismaLogger::Log(-1, Error, CharismaLogger::Error); });
 
-#if ENGINE_MAJOR_VERSION < 5
-	UWorld* World = GEngine->GetWorldFromContextObject(CurWorldContextObject);
-	World->GetTimerManager().SetTimer(PingTimerHandle, this, &UPlaythrough::FirePing, TimeBetweenPings, true);
-#else
 	UWorld* World = GEngine->GetWorldFromContextObject(CurWorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if (World != nullptr)
 	{
 		World->GetTimerManager().SetTimer(PingTimerHandle, this, &UPlaythrough::FirePing, TimeBetweenPings, true);
 	}
-#endif
 }
 
 void UPlaythrough::Connect()
 {
-	if (bIsPlaying)
+	// Only start the connection flow if we're disconnected
+	if (ConnectionState != ECharismaPlaythroughConnectionState::Disconnected)
 	{
+		CharismaLogger::Log(1, TEXT("Playthrough is already connecting or connected."), CharismaLogger::Warning);
 		return;
 	}
 
+	ChangeConnectionState(ECharismaPlaythroughConnectionState::Connecting);
+
 	ClientInstance = MakeShared<Client>(UCharismaAPI::SocketURL);
-	CharismaLogger::Log(1, "Connecting...", CharismaLogger::Info);
 	ClientInstance->JoinOrCreate<void>("chat",
 		{{"token", FStringToStdString(CurToken)}, {"playthroughId", FStringToStdString(CurPlaythroughUuid)},
 			{"sdkInfo", UPlaythrough::SdkInfo}},
@@ -173,7 +165,8 @@ void UPlaythrough::Connect()
 
 void UPlaythrough::Disconnect()
 {
-	bIsPlaying = false;
+	ChangeConnectionState(ECharismaPlaythroughConnectionState::Disconnected);
+
 	bCalledByDisconnect = true;
 
 	if (RoomInstance.IsValid())
@@ -189,7 +182,7 @@ void UPlaythrough::Disconnect()
 
 void UPlaythrough::Action(const FString& ConversationUuid, const FString& ActionName) const
 {
-	if (!RoomInstance)
+	if (!RoomInstance || ConnectionState != ECharismaPlaythroughConnectionState::Connected)
 	{
 		CharismaLogger::Log(6, "Charisma must be connected to before sending events.", CharismaLogger::Warning);
 		return;
@@ -210,13 +203,12 @@ void UPlaythrough::Action(const FString& ConversationUuid, const FString& Action
 void UPlaythrough::Start(const FString& ConversationUuid, const int32 SceneIndex, const int32 StartGraphId,
 	const FString& StartGraphReferenceId, const ECharismaSpeechAudioFormat AudioFormat)
 {
-	if (!RoomInstance)
+	if (!RoomInstance || ConnectionState != ECharismaPlaythroughConnectionState::Connected)
 	{
 		CharismaLogger::Log(6, "Charisma must be connected to before sending events.", CharismaLogger::Warning);
 		return;
 	}
 
-	bIsPlaying = true;
 	SpeechAudioFormat = AudioFormat;
 
 	StartPayload payload;
@@ -247,7 +239,7 @@ void UPlaythrough::Start(const FString& ConversationUuid, const int32 SceneIndex
 
 void UPlaythrough::Tap(const FString& ConversationUuid) const
 {
-	if (!RoomInstance)
+	if (!RoomInstance || ConnectionState != ECharismaPlaythroughConnectionState::Connected)
 	{
 		CharismaLogger::Log(6, "Charisma must be connected to before sending events.", CharismaLogger::Warning);
 		return;
@@ -266,7 +258,7 @@ void UPlaythrough::Tap(const FString& ConversationUuid) const
 
 void UPlaythrough::Reply(const FString& ConversationUuid, const FString& Message) const
 {
-	if (!RoomInstance)
+	if (!RoomInstance || ConnectionState != ECharismaPlaythroughConnectionState::Connected)
 	{
 		CharismaLogger::Log(6, "Charisma must be connected to before sending events.", CharismaLogger::Warning);
 		return;
@@ -286,7 +278,7 @@ void UPlaythrough::Reply(const FString& ConversationUuid, const FString& Message
 
 void UPlaythrough::Resume(const FString& ConversationUuid) const
 {
-	if (!RoomInstance)
+	if (!RoomInstance || ConnectionState != ECharismaPlaythroughConnectionState::Connected)
 	{
 		CharismaLogger::Log(6, "Charisma must be connected to before sending events.", CharismaLogger::Warning);
 		return;
@@ -333,7 +325,7 @@ SpeechConfig UPlaythrough::GetSpeechConfig(const ECharismaSpeechAudioFormat Audi
 
 void UPlaythrough::Play() const
 {
-	if (!RoomInstance)
+	if (!RoomInstance || ConnectionState != ECharismaPlaythroughConnectionState::Connected)
 	{
 		CharismaLogger::Log(6, "Charisma must be connected to before sending events.", CharismaLogger::Warning);
 		return;
@@ -344,7 +336,7 @@ void UPlaythrough::Play() const
 
 void UPlaythrough::Pause() const
 {
-	if (!RoomInstance)
+	if (!RoomInstance || ConnectionState != ECharismaPlaythroughConnectionState::Connected)
 	{
 		CharismaLogger::Log(6, "Charisma must be connected to before sending events.", CharismaLogger::Warning);
 		return;
@@ -355,7 +347,7 @@ void UPlaythrough::Pause() const
 
 void UPlaythrough::StartSpeechRecognition(const ECharismaSpeechRecognitionAWSLanguageCode LanguageCode, bool& bWasSuccessful)
 {
-	if (!RoomInstance)
+	if (!RoomInstance || ConnectionState != ECharismaPlaythroughConnectionState::Connected)
 	{
 		CharismaLogger::Log(6, "Charisma must be connected to before sending events.", CharismaLogger::Warning);
 		return;
@@ -405,10 +397,11 @@ void UPlaythrough::ReconnectionFlow()
 {
 	if (bCalledByDisconnect)
 	{
+		ChangeConnectionState(ECharismaPlaythroughConnectionState::Disconnected);
 		return;
 	}
 
-	CharismaLogger::Log(1, "Reconnecting...", CharismaLogger::Info);
+	ChangeConnectionState(ECharismaPlaythroughConnectionState::Reconnecting);
 
 	ClientInstance->JoinById<void>(RoomInstance->Id, {{"sessionId", FStringToStdString(RoomInstance->SessionId)}},
 		[this](TSharedPtr<MatchMakeError> Error, TSharedPtr<Room<void>> Room)
@@ -419,6 +412,7 @@ void UPlaythrough::ReconnectionFlow()
 				return;
 			}
 
+			ChangeConnectionState(ECharismaPlaythroughConnectionState::Connected);
 			this->OnRoomJoined(Room);
 		});
 }
@@ -438,6 +432,10 @@ void UPlaythrough::ReconnectionFlowCreate()
 				{
 					this->ReconnectionDelay();
 				}
+				else
+				{
+					ChangeConnectionState(ECharismaPlaythroughConnectionState::Disconnected);
+				}
 				return;
 			}
 
@@ -447,18 +445,22 @@ void UPlaythrough::ReconnectionFlowCreate()
 
 void UPlaythrough::ReconnectionDelay()
 {
-	float DelayTime = 5;
-	DelayTime = DelayTime + FMath::RandRange(0, 3);
-	FTimerHandle ReconnectionTimer;
-
-#if ENGINE_MAJOR_VERSION < 5
-	UWorld* World = GEngine->GetWorldFromContextObject(CurWorldContextObject);
-	World->GetTimerManager().SetTimer(ReconnectionTimer, this, &UPlaythrough::ReconnectionFlowCreate, DelayTime, false);
-#else
 	UWorld* World = GEngine->GetWorldFromContextObject(CurWorldContextObject, EGetWorldErrorMode::ReturnNull);
 	if (World != nullptr)
 	{
+		float DelayTime = ReconnectionTryDelay + FMath::RandRange(0.0f, ReconnectionTryJitter);
+		FTimerHandle ReconnectionTimer;
 		World->GetTimerManager().SetTimer(ReconnectionTimer, this, &UPlaythrough::ReconnectionFlowCreate, DelayTime, false);
 	}
-#endif
+}
+
+void UPlaythrough::ChangeConnectionState(ECharismaPlaythroughConnectionState NewConnectionState)
+{
+	if (NewConnectionState != ConnectionState)
+	{
+		CharismaLogger::Log(1, TEXT("Connection state change: ") + UEnum::GetDisplayValueAsText(NewConnectionState).ToString(), CharismaLogger::Info);
+		ECharismaPlaythroughConnectionState PreviousConnectionState = ConnectionState;
+		ConnectionState = NewConnectionState;
+		OnChangeConnectionState.Broadcast(PreviousConnectionState, NewConnectionState);
+	}
 }
