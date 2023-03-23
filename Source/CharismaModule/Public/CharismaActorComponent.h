@@ -52,8 +52,8 @@ public:
 	void OnMessageReceived(const FCharismaMessageEvent& Message);
 
 	UFUNCTION()
-	void OnAudioDecoded(
-		URuntimeAudioImporterLibrary* RuntimeAudioImporterLibraryRef, UImportedSoundWave* SoundWaveRef, ETranscodingStatus Status);
+	void OnAudioDecoded(URuntimeAudioImporterLibrary* RuntimeAudioImporterLibraryRef, UImportedSoundWave* SoundWaveRef,
+		ERuntimeImportStatus Status);
 
 protected:
 	// Called when the game starts

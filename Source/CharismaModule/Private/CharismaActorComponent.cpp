@@ -51,15 +51,15 @@ void UCharismaActorComponent::OnMessageReceived(const FCharismaMessageEvent& Mes
 
 		if (bPlayAudio && CharacterAudioComponent)
 		{
-			RuntimeAudioImporterLibrary->ImportAudioFromBuffer(Message.Message.Speech.Audio, EAudioFormat::Auto);
+			RuntimeAudioImporterLibrary->ImportAudioFromBuffer(Message.Message.Speech.Audio, ERuntimeAudioFormat::Auto);
 		}
 	}
 }
 
 void UCharismaActorComponent::OnAudioDecoded(
-	URuntimeAudioImporterLibrary* RuntimeAudioImporterLibraryRef, UImportedSoundWave* SoundWaveRef, ETranscodingStatus Status)
+	URuntimeAudioImporterLibrary* RuntimeAudioImporterLibraryRef, UImportedSoundWave* SoundWaveRef, ERuntimeImportStatus Status)
 {
-	if (Status == ETranscodingStatus::SuccessfulImport)
+	if (Status == ERuntimeImportStatus::SuccessfulImport)
 	{
 		CharacterAudioComponent->SetSound(SoundWaveRef);
 		CharacterAudioComponent->Play();
