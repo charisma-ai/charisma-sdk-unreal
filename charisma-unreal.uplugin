@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
-	"Version": 5,
-	"VersionName": "0.6.0",
+	"Version": 7,
+	"VersionName": "0.7.0",
 	"FriendlyName": "Charisma",
 	"Description": "Charisma SDK for Unreal Engine",
 	"Category": "Charisma",
@@ -17,7 +17,10 @@
 		{
 			"Name": "CharismaModule",
 			"Type": "Runtime",
-			"LoadingPhase": "PreDefault"
+			"LoadingPhase": "PreDefault",
+			"PlatformAllowList": [
+				"Win64"
+			]
 		}
 	]
 }
