@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
-	"Version": 7,
-	"VersionName": "0.7.0",
+	"Version": 8,
+	"VersionName": "0.7.1",
 	"FriendlyName": "Charisma",
 	"Description": "Charisma SDK for Unreal Engine",
 	"Category": "Charisma",
