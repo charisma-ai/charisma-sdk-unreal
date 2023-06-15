@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "Engine/Engine.h"
+
 DECLARE_LOG_CATEGORY_EXTERN(LogCharisma, Log, All);
 
 namespace CharismaLogger

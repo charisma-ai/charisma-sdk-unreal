@@ -2,6 +2,7 @@
 
 #include "CharismaActorComponent.h"
 
+#include "Engine/World.h"
 #include "TimerManager.h"
 
 // Sets default values for this component's properties
