@@ -267,7 +267,10 @@ struct FCharismaSpeech
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
 	float Duration;
 
-	MSGPACK_DEFINE_MAP(MSGPACK_NVP("audio", Audio), MSGPACK_NVP("duration", Duration));
+	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
+	FString Encoding;
+
+	MSGPACK_DEFINE_MAP(MSGPACK_NVP("audio", Audio), MSGPACK_NVP("duration", Duration), MSGPACK_NVP("encoding", Encoding));
 };
 
 USTRUCT(BlueprintType)
@@ -464,7 +467,7 @@ struct FCharismaSpeechRecognitionResultEvent
 
 struct SpeechConfig
 {
-	std::string encoding;
+	std::vector<std::string> encoding;
 	std::string output;
 	MSGPACK_DEFINE_MAP(encoding, output);
 };

@@ -89,7 +89,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
 	void Start(const FString& ConversationUuid, const int32 SceneIndex, const int32 StartGraphId,
 		const FString& StartGraphReferenceId,
-		const ECharismaSpeechAudioFormat SpeechAudioFormat = ECharismaSpeechAudioFormat::None);
+		const TArray<ECharismaSpeechAudioFormat> SpeechAudioFormat);
 
 	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
 	void Reply(const FString& ConversationUuid, const FString& Message) const;
@@ -101,7 +101,7 @@ public:
 	void Tap(const FString& ConversationUuid) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
-	void ToggleSpeech(const ECharismaSpeechAudioFormat AudioFormat);
+	void ToggleSpeech(const TArray<ECharismaSpeechAudioFormat> AudioFormat);
 
 	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
 	void Play() const;
@@ -168,7 +168,7 @@ private:
 
 	// Member
 
-	SpeechConfig GetSpeechConfig(const ECharismaSpeechAudioFormat AudioFormat) const;
+	SpeechConfig GetSpeechConfig(const TArray<ECharismaSpeechAudioFormat> AudioFormat) const;
 
 	void OnRoomJoined(TSharedPtr<Room<void>> Room);
 
@@ -198,7 +198,7 @@ private:
 
 	ECharismaPlaythroughConnectionState ConnectionState = ECharismaPlaythroughConnectionState::Disconnected;
 
-	ECharismaSpeechAudioFormat SpeechAudioFormat = ECharismaSpeechAudioFormat::None;
+	TArray<ECharismaSpeechAudioFormat> SpeechAudioFormat;
 
 	TSharedPtr<UMicrophoneCapture> MicrophoneCaptureInstance;
 };
