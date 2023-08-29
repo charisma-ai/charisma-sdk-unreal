@@ -1,6 +1,7 @@
 # Charisma SDK for Unreal Engine
 
-This Unreal Engine plugin is verified to work with C++ projects using engine version `4.26` and `5.0` only. If you find the plugin also works in another version, feel free to submit a pull request to update this!
+This Unreal Engine plugin is verified to work with C++ projects using engine versions `4.26`-`4.27` and `5.0`-`5.2` only. If you find the plugin also works in another version, feel free to submit a pull request to update this!
+
 
 If you have any questions or need a hand, please reach out to us at [hello@charisma.ai](mailto:hello@charisma.ai)!
 
