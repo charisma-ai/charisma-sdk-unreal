@@ -110,15 +110,22 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 		});
 
 	this->RoomInstance->OnMessage("speech-recognition-error", [this](const msgpack::object& message)
-		{ CharismaLogger::Log(-1, TEXT("Speech recognition error"), CharismaLogger::Error); });
+		{ 
+			FSpeechRecognitionErrorResult Event = message.as< FSpeechRecognitionErrorResult>();
+			CharismaLogger::Log(-1, 
+				TEXT("Speech recognition error: <") + StdStringToFString(Event.message) + TEXT(">, error when: ") + StdStringToFString(Event.errorOccuredWhen)
+				, CharismaLogger::Error);
+		}
+	);
+
 	this->RoomInstance->OnMessage("speech-recognition-result",
 		[this](const msgpack::object& message)
 		{
-			FCharismaSpeechRecognitionResultEventAWS Event = message.as<FCharismaSpeechRecognitionResultEventAWS>();
-			if (Event.TranscriptEvent.Transcript.Results.Num() > 0)
+			FCharismaSpeechRecognitionResultEvent Event = message.as<FCharismaSpeechRecognitionResultEvent>();
+			
+			if (!Event.Text.IsEmpty())
 			{
-				OnSpeechRecognitionResult.Broadcast(Event.TranscriptEvent.Transcript.Results[0].Alternatives[0].Transcript,
-					!Event.TranscriptEvent.Transcript.Results[0].IsPartial);
+				OnSpeechRecognitionResult.Broadcast(Event.Text, Event.IsFinal);
 			}
 		});
 
@@ -347,7 +354,11 @@ void UPlaythrough::Pause() const
 	RoomInstance->Send("pause");
 }
 
-void UPlaythrough::StartSpeechRecognition(const ECharismaSpeechRecognitionAWSLanguageCode LanguageCode, bool& bWasSuccessful)
+void UPlaythrough::StartSpeechRecognition(bool& bWasSuccessful,
+	const ECharismaSpeechRecognitionService service,
+	const FString languageCode, 
+	const FString encoding,
+	const int32 sampleRate)
 {
 	if (!RoomInstance || ConnectionState != ECharismaPlaythroughConnectionState::Connected)
 	{
@@ -361,22 +372,39 @@ void UPlaythrough::StartSpeechRecognition(const ECharismaSpeechRecognitionAWSLan
 	}
 
 	MicrophoneCaptureInstance->OnSpeechAudio = [this](const TArray<uint8>& Audio, uint32 AudioLength)
-	{ RoomInstance->Send("speech-recognition-chunk", Audio); };
+	{
+		RoomInstance->Send("speech-recognition-chunk", Audio); 
+	};
 
-	bWasSuccessful = MicrophoneCaptureInstance->StartCapture();
+	bWasSuccessful = MicrophoneCaptureInstance->StartCapture(sampleRate);
 
 	if (bWasSuccessful)
 	{
 		SpeechRecognitionStartPayload payload;
-		payload.service = FStringToStdString(TEXT("aws"));
-
-		SpeechRecognitionStartServiceOptionsAWS serviceOptions;
-		FText DisplayValue = UEnum::GetDisplayValueAsText(LanguageCode);
-		serviceOptions.LanguageCode = FStringToStdString(DisplayValue.ToString());
-		payload.serviceOptions = serviceOptions;
+		payload.service = FStringToStdString(GetSpeechRecognitionServiceString(service));
+		payload.languageCode = FStringToStdString(languageCode);
+		payload.encoding = FStringToStdString(encoding);
+		payload.sampleRate = sampleRate;
 
 		RoomInstance->Send("speech-recognition-start", payload);
 	}
+}
+
+FString UPlaythrough::GetSpeechRecognitionServiceString(const ECharismaSpeechRecognitionService Service) 
+{
+	switch (Service)
+	{
+	case ECharismaSpeechRecognitionService::Unified:
+		return "unified";
+	case ECharismaSpeechRecognitionService::Google:
+		return "unified:google";
+	case ECharismaSpeechRecognitionService::AWS:
+		return "unified:aws";
+	case ECharismaSpeechRecognitionService::Deepgram:
+		return "unified:deepgram";
+	}
+
+	return "";
 }
 
 void UPlaythrough::StopSpeechRecognition()

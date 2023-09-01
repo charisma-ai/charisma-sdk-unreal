@@ -25,20 +25,12 @@ enum class ECharismaSpeechAudioFormat : uint8
 };
 
 UENUM(BlueprintType, Category = "Charisma|Playthrough")
-enum class ECharismaSpeechRecognitionAWSLanguageCode : uint8
+enum class ECharismaSpeechRecognitionService : uint8
 {
-	DE_DE UMETA(DisplayName = "de-DE"),
-	EN_AU UMETA(DisplayName = "en-AU"),
-	EN_GB UMETA(DisplayName = "en-GB"),
-	EN_US UMETA(DisplayName = "en-US"),
-	ES_US UMETA(DisplayName = "es-US"),
-	FR_CA UMETA(DisplayName = "fr-CA"),
-	FR_FR UMETA(DisplayName = "fr-FR"),
-	IT_IT UMETA(DisplayName = "it-IT"),
-	JA_JP UMETA(DisplayName = "ja-JP"),
-	KO_KR UMETA(DisplayName = "ko-KR"),
-	PT_BR UMETA(DisplayName = "pt-BR"),
-	ZH_CN UMETA(DisplayName = "zh-CN"),
+	Unified UMETA(DisplayName = "unified"),
+	Google UMETA(DisplayName = "unified:google"),
+	AWS UMETA(DisplayName = "unified:aws"),
+	Deepgram UMETA(DisplayName = "unified:deepgram")
 };
 
 UENUM(BlueprintType, Category = "Charisma|Playthrough")
@@ -110,7 +102,11 @@ public:
 	void Pause() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
-	void StartSpeechRecognition(const ECharismaSpeechRecognitionAWSLanguageCode LanguageCode, bool& bWasSuccessful);
+		void StartSpeechRecognition(bool& bWasSuccessful,
+			const ECharismaSpeechRecognitionService service = ECharismaSpeechRecognitionService::AWS,
+			const FString languageCode = "en-US",
+			const FString encoding = "pcm",
+			const int32 sampleRate = 16000);
 
 	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
 	void StopSpeechRecognition();
@@ -165,6 +161,9 @@ private:
 
 	UFUNCTION()
 	void ChangeConnectionState(ECharismaPlaythroughConnectionState NewConnectionState);
+
+	UFUNCTION()
+	FString GetSpeechRecognitionServiceString(const ECharismaSpeechRecognitionService Service);
 
 	// Member
 
