@@ -394,7 +394,6 @@ struct FCharismaSpeechRecognitionResultEvent
 		
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
 	FString Text;
-	;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
 	bool SpeechFinal;
@@ -409,10 +408,10 @@ struct FCharismaSpeechRecognitionResultEvent
 
 struct FSpeechRecognitionErrorResult
 {
-	std::string message;
-	std::string errorOccuredWhen;
+	std::string Message;
+	std::string ErrorOccuredWhen;
 
-	MSGPACK_DEFINE_MAP(message, errorOccuredWhen);
+	MSGPACK_DEFINE_MAP(MSGPACK_NVP("message", Message), MSGPACK_NVP("errorOccuredWhen", ErrorOccuredWhen));
 };
 
 // Events sent from client -> server
