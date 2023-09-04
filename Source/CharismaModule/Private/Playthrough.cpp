@@ -29,7 +29,7 @@ UPlaythrough* UPlaythrough::NewPlaythroughObject(UObject* WorldContextObject, co
 	return Playthrough;
 }
 
-const nlohmann::json UPlaythrough::SdkInfo = {{"sdkId", "unreal"}, {"sdkVersion", "0.8.0"}, {"protocolVersion", 1}};
+const nlohmann::json UPlaythrough::SdkInfo = {{"sdkId", "unreal"}, {"sdkVersion", "0.9.0"}, {"protocolVersion", 1}};
 
 void UPlaythrough::FirePing()
 {
