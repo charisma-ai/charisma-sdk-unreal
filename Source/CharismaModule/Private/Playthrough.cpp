@@ -53,9 +53,7 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 	this->RoomInstance = Room;
 
 	this->RoomInstance->OnMessage("status",
-		[this](const msgpack::object& message) {
-			ChangeConnectionState(ECharismaPlaythroughConnectionState::Connected);
-		});
+		[this](const msgpack::object& message) { ChangeConnectionState(ECharismaPlaythroughConnectionState::Connected); });
 
 	this->RoomInstance->OnMessage("message",
 		[this](const msgpack::object& message)
@@ -109,29 +107,28 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 			ChangeConnectionState(ECharismaPlaythroughConnectionState::Connected);
 		});
 
-	this->RoomInstance->OnMessage("speech-recognition-error", [this](const msgpack::object& message)
-		{ 
-			FSpeechRecognitionErrorResult Event = message.as< FSpeechRecognitionErrorResult>();
-			CharismaLogger::Log(-1, 
-				TEXT("Speech recognition error: <") + StdStringToFString(Event.message) + TEXT(">, error when: ") + StdStringToFString(Event.errorOccuredWhen)
-				, CharismaLogger::Error);
-		}
-	);
+	this->RoomInstance->OnMessage("speech-recognition-error",
+		[this](const msgpack::object& message)
+		{
+			FSpeechRecognitionErrorResult Event = message.as<FSpeechRecognitionErrorResult>();
+			CharismaLogger::Log(-1,
+				TEXT("Speech recognition error: <") + StdStringToFString(Event.Message) + TEXT(">, error when: ") +
+					StdStringToFString(Event.ErrorOccuredWhen),
+				CharismaLogger::Error);
+		});
 
 	this->RoomInstance->OnMessage("speech-recognition-result",
 		[this](const msgpack::object& message)
 		{
 			FCharismaSpeechRecognitionResultEvent Event = message.as<FCharismaSpeechRecognitionResultEvent>();
-			
+
 			if (!Event.Text.IsEmpty())
 			{
 				OnSpeechRecognitionResult.Broadcast(Event.Text, Event.IsFinal);
 			}
 		});
 
-	this->RoomInstance->OnLeave = ([this](int32 StatusCode) {
-				this->ReconnectionFlow();
-			});
+	this->RoomInstance->OnLeave = ([this](int32 StatusCode) { this->ReconnectionFlow(); });
 
 	this->RoomInstance->OnError =
 		([this](int32 StatusCode, const FString& Error) { CharismaLogger::Log(-1, Error, CharismaLogger::Error); });
@@ -310,7 +307,8 @@ void UPlaythrough::ToggleSpeech(const TArray<ECharismaSpeechAudioFormat> AudioFo
 SpeechConfig UPlaythrough::GetSpeechConfig(const TArray<ECharismaSpeechAudioFormat> AudioFormat) const
 {
 	SpeechConfig speechConfig;
-	for (const ECharismaSpeechAudioFormat& AudioFormatEntry : AudioFormat) {
+	for (const ECharismaSpeechAudioFormat& AudioFormatEntry : AudioFormat)
+	{
 		if (AudioFormatEntry == ECharismaSpeechAudioFormat::Mp3)
 		{
 			speechConfig.encoding.push_back("mp3");
@@ -354,11 +352,8 @@ void UPlaythrough::Pause() const
 	RoomInstance->Send("pause");
 }
 
-void UPlaythrough::StartSpeechRecognition(bool& bWasSuccessful,
-	const ECharismaSpeechRecognitionService service,
-	const FString languageCode, 
-	const FString encoding,
-	const int32 sampleRate)
+void UPlaythrough::StartSpeechRecognition(bool& bWasSuccessful, const ECharismaSpeechRecognitionService service,
+	const FString languageCode, const FString encoding, const int32 sampleRate)
 {
 	if (!RoomInstance || ConnectionState != ECharismaPlaythroughConnectionState::Connected)
 	{
@@ -372,9 +367,7 @@ void UPlaythrough::StartSpeechRecognition(bool& bWasSuccessful,
 	}
 
 	MicrophoneCaptureInstance->OnSpeechAudio = [this](const TArray<uint8>& Audio, uint32 AudioLength)
-	{
-		RoomInstance->Send("speech-recognition-chunk", Audio); 
-	};
+	{ RoomInstance->Send("speech-recognition-chunk", Audio); };
 
 	bWasSuccessful = MicrophoneCaptureInstance->StartCapture(sampleRate);
 
@@ -390,18 +383,18 @@ void UPlaythrough::StartSpeechRecognition(bool& bWasSuccessful,
 	}
 }
 
-FString UPlaythrough::GetSpeechRecognitionServiceString(const ECharismaSpeechRecognitionService Service) 
+FString UPlaythrough::GetSpeechRecognitionServiceString(const ECharismaSpeechRecognitionService Service)
 {
 	switch (Service)
 	{
-	case ECharismaSpeechRecognitionService::Unified:
-		return "unified";
-	case ECharismaSpeechRecognitionService::Google:
-		return "unified:google";
-	case ECharismaSpeechRecognitionService::AWS:
-		return "unified:aws";
-	case ECharismaSpeechRecognitionService::Deepgram:
-		return "unified:deepgram";
+		case ECharismaSpeechRecognitionService::Unified:
+			return "unified";
+		case ECharismaSpeechRecognitionService::Google:
+			return "unified:google";
+		case ECharismaSpeechRecognitionService::AWS:
+			return "unified:aws";
+		case ECharismaSpeechRecognitionService::Deepgram:
+			return "unified:deepgram";
 	}
 
 	return "";
@@ -488,7 +481,8 @@ void UPlaythrough::ChangeConnectionState(ECharismaPlaythroughConnectionState New
 {
 	if (NewConnectionState != ConnectionState)
 	{
-		CharismaLogger::Log(1, TEXT("Connection state change: ") + UEnum::GetDisplayValueAsText(NewConnectionState).ToString(), CharismaLogger::Info);
+		CharismaLogger::Log(1, TEXT("Connection state change: ") + UEnum::GetDisplayValueAsText(NewConnectionState).ToString(),
+			CharismaLogger::Info);
 		ECharismaPlaythroughConnectionState PreviousConnectionState = ConnectionState;
 		ConnectionState = NewConnectionState;
 		OnChangeConnectionState.Broadcast(PreviousConnectionState, NewConnectionState);

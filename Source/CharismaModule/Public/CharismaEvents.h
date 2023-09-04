@@ -391,7 +391,7 @@ USTRUCT(BlueprintType)
 struct FCharismaSpeechRecognitionResultEvent
 {
 	GENERATED_USTRUCT_BODY()
-		
+
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
 	FString Text;
 
@@ -401,9 +401,7 @@ struct FCharismaSpeechRecognitionResultEvent
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
 	bool IsFinal;
 
-	MSGPACK_DEFINE_MAP(MSGPACK_NVP("speechFinal", SpeechFinal),
-		MSGPACK_NVP("isFinal", IsFinal),
-		MSGPACK_NVP("text", Text));
+	MSGPACK_DEFINE_MAP(MSGPACK_NVP("speechFinal", SpeechFinal), MSGPACK_NVP("isFinal", IsFinal), MSGPACK_NVP("text", Text));
 };
 
 struct FSpeechRecognitionErrorResult
