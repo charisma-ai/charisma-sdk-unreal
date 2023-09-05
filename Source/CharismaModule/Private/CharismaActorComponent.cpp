@@ -50,7 +50,7 @@ void UCharismaActorComponent::OnMessageReceived(const FCharismaMessageEvent& Mes
 	{
 		CharacterEmotions = Message.Emotions;
 
-		if (bPlayAudio && CharacterAudioComponent)
+		if (bPlayAudio && CharacterAudioComponent && Message.Message.Speech.Audio.Num() > 0)
 		{
 			RuntimeAudioImporterLibrary->ImportAudioFromBuffer(Message.Message.Speech.Audio, ERuntimeAudioFormat::Auto);
 		}
