@@ -111,9 +111,9 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 
 	this->RoomInstance->OnMessage("speech-recognition-error", [this](const msgpack::object& message)
 		{ 
-			FSpeechRecognitionErrorResult Event = message.as< FSpeechRecognitionErrorResult>();
+			FSpeechRecognitionErrorResult Event = message.as<FSpeechRecognitionErrorResult>();
 			CharismaLogger::Log(-1, 
-				TEXT("Speech recognition error: <") + StdStringToFString(Event.message) + TEXT(">, error when: ") + StdStringToFString(Event.errorOccuredWhen)
+				TEXT("Speech recognition error: <") + StdStringToFString(Event.Message) + TEXT(">, error when: ") + StdStringToFString(Event.ErrorOccuredWhen)
 				, CharismaLogger::Error);
 		}
 	);
