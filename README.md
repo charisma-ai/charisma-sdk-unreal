@@ -7,7 +7,7 @@ If you have any questions or need a hand, please reach out to us at [hello@chari
 
 ## Getting started
 
-**Important:** Before setting up the Charisma SDK for Unreal Engine, you’ll need to have created a web or game story (not an app story!), which requires a Charisma licence. Please visit the [licencing docs on our website](https://charisma.ai/docs/licencing) for more info!
+**Important:** Before setting up the Charisma SDK for Unreal Engine, you’ll need to have created a Pro story (not a Starter story!), which requires a Charisma licence. Please visit the [licencing docs on our website](https://charisma.ai/docs/licencing) for more info!
 
 1. If you haven’t already, go ahead and create an Unreal **C++** project. Make sure you are using a version of the engine that is supported by this plugin.
 
