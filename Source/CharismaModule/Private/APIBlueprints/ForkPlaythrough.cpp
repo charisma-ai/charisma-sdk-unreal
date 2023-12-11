@@ -12,13 +12,14 @@ UForkPlaythrough* UForkPlaythrough::ForkPlaythrough(UObject* WorldContextObject,
 	UForkPlaythrough* BlueprintNode = NewObject<UForkPlaythrough>();
 	BlueprintNode->WorldContextObject = WorldContextObject;
 	BlueprintNode->Token = Token;
-	
+
 	return BlueprintNode;
 }
 
 void UForkPlaythrough::Activate()
 {
 	UCharismaAPI::ForkPlaythrough(
-		Token, [&](const FString Token, const FString PlaythroughUuid) { Success.Broadcast(Token, PlaythroughUuid, TEXT("")); },
-		[&](const FString Error) { Failure.Broadcast(TEXT(""),TEXT(""), Error); });
+		Token,
+		[&](const FString NewToken, const FString PlaythroughUuid) { Success.Broadcast(NewToken, PlaythroughUuid, TEXT("")); },
+		[&](const FString Error) { Failure.Broadcast(TEXT(""), TEXT(""), Error); });
 }
