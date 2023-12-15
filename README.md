@@ -162,3 +162,20 @@ For methods relating to the Charisma HTTP API, consult the [APIBlueprints](/Sour
 - `SetMemory`
 
 For most other methods relating to the Charisma play API (runtime chat events), consult the [Playthrough.h](/Source/CharismaModule/Public/Playthrough.h) file.
+
+## Using Speech Recognition
+
+To use the `Start Speech Recognition` and `Stop Speech Recognition` Blueprint nodes, you first need to add the following config to  `Config/DefaultEngine.ini`:
+
+```ini
+[Voice]
+bEnabled=True
+
+[SystemSettings]
+voice.SilenceDetectionThreshold=-1
+voice.MicNoiseGateThreshold=-1
+```
+
+This will enable the voice subsystem and ensure that audio data is always picked up and forwarded to the speech recognition system, regardless of how quiet or noisy it is.
+
+Additionally, double-check that you have "Is speech to text enabled?" on your Story Overview page. Speech recognition is a premium feature that uses credits.
