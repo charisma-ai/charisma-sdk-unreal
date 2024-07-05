@@ -9,14 +9,14 @@ struct CHARISMAMODULE_API FCharismaConnectionParams
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Charisma|GameMode")
-	int StoryId;
+	int StoryId = 0;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Charisma|GameMode")
-	int StoryVersion;
+	int StoryVersion = 0;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Charisma|GameMode")
-	FString ApiKey;
+	FString ApiKey = "";
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Charisma|GameMode")
-	FString StartGraphRefId;
+	FString StartGraphRefId = "";
 };

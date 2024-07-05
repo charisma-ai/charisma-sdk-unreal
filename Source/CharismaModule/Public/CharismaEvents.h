@@ -192,22 +192,22 @@ struct FCharismaActiveEffect
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	FString Feeling;
+	FString Feeling = "";
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	float Intensity;
+	float Intensity = 0;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	int32 ReplyPropertiesId;
+	int32 ReplyPropertiesId = 0;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	int32 CharacterId;
+	int32 CharacterId = 0;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	FString Type;
+	FString Type = "";
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	int32 DurationRemaining;
+	int32 DurationRemaining = 0;
 
 	MSGPACK_DEFINE_MAP(MSGPACK_NVP("feeling", Feeling), MSGPACK_NVP("intensity", Intensity),
 		MSGPACK_NVP("replyPropertiesId", ReplyPropertiesId), MSGPACK_NVP("characterId", CharacterId), MSGPACK_NVP("type", Type),
@@ -220,19 +220,19 @@ struct FCharismaEmotion
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	int32 Id;
+	int32 Id = 0;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	FString Name;
+	FString Name = "";
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	float MoodPositivity;
+	float MoodPositivity = 0;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	float MoodEnergy;
+	float MoodEnergy= 0;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	float PlayerRelationship;
+	float PlayerRelationship = 0;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
 	TArray<FCharismaActiveEffect> ActiveEffects;
@@ -248,10 +248,10 @@ struct FCharismaMemory
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	FString RecallValue;
+	FString RecallValue = "";
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	FString SaveValue;
+	FString SaveValue = "";
 
 	TOptional<FString> SaveValue_Optional;
 
@@ -267,10 +267,10 @@ struct FCharismaSpeech
 	TArray<uint8> Audio;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	float Duration;
+	float Duration = 0;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	FString Encoding;
+	FString Encoding = "";
 
 	MSGPACK_DEFINE_MAP(MSGPACK_NVP("audio", Audio), MSGPACK_NVP("duration", Duration), MSGPACK_NVP("encoding", Encoding));
 };
@@ -281,13 +281,13 @@ struct FCharismaCharacter
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	int32 Id;
+	int32 Id = 0;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	FString Name;
+	FString Name = "";
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	FString Avatar;
+	FString Avatar = "";
 
 	TOptional<FString> Avatar_Optional;
 
@@ -300,7 +300,7 @@ struct FCharismaMessage
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	FString Text;
+	FString Text = "";
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
 	TMap<FString, FString> Metadata;
@@ -325,19 +325,19 @@ struct FCharismaMessageEvent
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	FString ConversationUuid;
+	FString ConversationUuid = "";
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	FString Type;
+	FString Type = "";
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
 	FCharismaMessage Message;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	bool EndStory;
+	bool EndStory = false;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	bool TapToContinue;
+	bool TapToContinue = false;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
 	TArray<FCharismaEmotion> Emotions;
@@ -346,10 +346,10 @@ struct FCharismaMessageEvent
 	TArray<FCharismaMemory> Memories;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	FString EventId;
+	FString EventId = "";
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	int64 Timestamp;
+	int64 Timestamp = 0;
 
 	MSGPACK_DEFINE_MAP(MSGPACK_NVP("conversationUuid", ConversationUuid), MSGPACK_NVP("type", Type),
 		MSGPACK_NVP("message", Message), MSGPACK_NVP("endStory", EndStory), MSGPACK_NVP("tapToContinue", TapToContinue),
@@ -363,7 +363,7 @@ struct FCharismaErrorEvent
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	FString Error;
+	FString Error = "";
 
 	MSGPACK_DEFINE_MAP(MSGPACK_NVP("error", Error));
 };
@@ -395,13 +395,13 @@ struct FCharismaSpeechRecognitionResultEvent
 	GENERATED_USTRUCT_BODY()
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	FString Text;
+	FString Text = "";
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	bool SpeechFinal;
+	bool SpeechFinal = false;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Charisma|Event")
-	bool IsFinal;
+	bool IsFinal = false;
 
 	MSGPACK_DEFINE_MAP(MSGPACK_NVP("speechFinal", SpeechFinal), MSGPACK_NVP("isFinal", IsFinal), MSGPACK_NVP("text", Text));
 };
