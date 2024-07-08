@@ -179,3 +179,13 @@ voice.MicNoiseGateThreshold=-1
 This will enable the voice subsystem and ensure that audio data is always picked up and forwarded to the speech recognition system, regardless of how quiet or noisy it is.
 
 Additionally, double-check that you have "Is speech to text enabled?" on your Story Overview page. Speech recognition is a premium feature that uses credits.
+
+## Packaging
+
+Certain plugins in the project use a specific C++ exception handling mode. Because of this, you will need to modify the build configuration to enable exception semantics, otherwise the packaging process will error out.
+
+To do this:
+- Go into your project's `PROJECTNAME.Target.cs` file
+- Modify the build configuration by adding the following lines: `bOverrideBuildEnvironment = true;` and `bForceEnableExceptions = true;`
+- If your project requires more specific compilation arguments, you can add `AdditionalCompilerArguments = "/EHsc";` **instead of** `bForceEnableExceptions`
+- The project should now package successfully. If not, you will now be able to see exceptions thrown by all the modules within the project.
