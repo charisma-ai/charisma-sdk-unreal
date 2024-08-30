@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
-	"Version": 12,
-	"VersionName": "0.11.0",
+	"Version": 14,
+	"VersionName": "0.14.0",
 	"FriendlyName": "Charisma",
 	"Description": "Charisma SDK for Unreal Engine",
 	"Category": "Charisma",
@@ -10,7 +10,7 @@
 	"DocsURL": "https://charisma.ai/docs",
 	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/b3608625a3004a4ea3d059ccb7166ccc",
 	"SupportURL": "https://charisma.ai/docs/troubleshooting#get-help",
-	"EngineVersion": "5.3.0",
+	"EngineVersion": "5.4.0",
 	"CanContainContent": true,
 	"IsBetaVersion": true,
 	"Installed": true,
