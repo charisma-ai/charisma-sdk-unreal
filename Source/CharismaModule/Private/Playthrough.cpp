@@ -367,7 +367,9 @@ void UPlaythrough::StartSpeechRecognition(bool& bWasSuccessful, const ECharismaS
 	}
 
 	MicrophoneCaptureInstance->OnSpeechAudio = [this](const TArray<uint8>& Audio, uint32 AudioLength)
-	{ RoomInstance->Send("speech-recognition-chunk", Audio); };
+	{
+		RoomInstance->Send("speech-recognition-chunk", Audio);
+	};
 
 	bWasSuccessful = MicrophoneCaptureInstance->StartCapture(sampleRate);
 
