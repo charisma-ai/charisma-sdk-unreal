@@ -353,7 +353,7 @@ void UPlaythrough::Pause() const
 }
 
 void UPlaythrough::StartSpeechRecognition(bool& bWasSuccessful, const ECharismaSpeechRecognitionService service,
-	const FString languageCode, const FString encoding, const int32 sampleRate)
+	const FString languageCode, const int32 sampleRate)
 {
 	if (!RoomInstance || ConnectionState != ECharismaPlaythroughConnectionState::Connected)
 	{
@@ -378,7 +378,6 @@ void UPlaythrough::StartSpeechRecognition(bool& bWasSuccessful, const ECharismaS
 		SpeechRecognitionStartPayload payload;
 		payload.service = FStringToStdString(GetSpeechRecognitionServiceString(service));
 		payload.languageCode = FStringToStdString(languageCode);
-		payload.encoding = FStringToStdString(encoding);
 		payload.sampleRate = sampleRate;
 
 		RoomInstance->Send("speech-recognition-start", payload);

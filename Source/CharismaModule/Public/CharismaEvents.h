@@ -462,7 +462,7 @@ struct SpeechRecognitionStartPayload
 	std::string service;
 	TOptional<int> sampleRate;
 	TOptional<std::string> languageCode;
-	TOptional<std::string> encoding;
+	//TOptional<std::string> encoding;
 
-	MSGPACK_DEFINE_MAP(service, sampleRate, languageCode, encoding);
+	MSGPACK_DEFINE_MAP(service, sampleRate, languageCode/*, encoding*/);
 };

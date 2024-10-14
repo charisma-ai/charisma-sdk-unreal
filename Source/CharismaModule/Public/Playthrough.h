@@ -105,7 +105,6 @@ public:
 		void StartSpeechRecognition(bool& bWasSuccessful,
 			const ECharismaSpeechRecognitionService service = ECharismaSpeechRecognitionService::AWS,
 			const FString languageCode = "en-US",
-			const FString encoding = "pcm",
 			const int32 sampleRate = 16000);
 
 	UFUNCTION(BlueprintCallable, Category = "Charisma|Playthrough Events")
