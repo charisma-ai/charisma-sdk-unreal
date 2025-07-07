@@ -53,7 +53,10 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 	this->RoomInstance = Room;
 
 	this->RoomInstance->OnMessage("status",
-		[this](const msgpack::object& message) { ChangeConnectionState(ECharismaPlaythroughConnectionState::Connected); });
+		[this](const msgpack::object& message)
+		{
+			ChangeConnectionState(ECharismaPlaythroughConnectionState::Connected);
+		});
 
 	this->RoomInstance->OnMessage("message",
 		[this](const msgpack::object& message)
@@ -86,8 +89,14 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 			OnMessage.Broadcast(Event);
 		});
 
-	this->RoomInstance->OnMessage("start-typing", [this](const msgpack::object& message) { OnTyping.Broadcast(true); });
-	this->RoomInstance->OnMessage("stop-typing", [this](const msgpack::object& message) { OnTyping.Broadcast(false); });
+	this->RoomInstance->OnMessage("start-typing", [this](const msgpack::object& message)
+	{
+		OnTyping.Broadcast(true);
+	});
+	this->RoomInstance->OnMessage("stop-typing", [this](const msgpack::object& message)
+	{
+		OnTyping.Broadcast(false);
+	});
 
 	this->RoomInstance->OnMessage("problem",
 		[this](const msgpack::object& message)
@@ -113,7 +122,7 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 			FSpeechRecognitionErrorResult Event = message.as<FSpeechRecognitionErrorResult>();
 			CharismaLogger::Log(-1,
 				TEXT("Speech recognition error: <") + StdStringToFString(Event.Message) + TEXT(">, error when: ") +
-					StdStringToFString(Event.ErrorOccuredWhen),
+				StdStringToFString(Event.ErrorOccuredWhen),
 				CharismaLogger::Error);
 		});
 
@@ -128,16 +137,18 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 			}
 		});
 
-	this->RoomInstance->OnLeave = ([this](int32 StatusCode) { this->ReconnectionFlow(); });
+	this->RoomInstance->OnLeave = ([this](int32 StatusCode)
+	{
+		this->ReconnectionFlow();
+	});
 
 	this->RoomInstance->OnError =
-		([this](int32 StatusCode, const FString& Error) { CharismaLogger::Log(-1, Error, CharismaLogger::Error); });
-
-	UWorld* World = GEngine->GetWorldFromContextObject(CurWorldContextObject, EGetWorldErrorMode::ReturnNull);
-	if (World != nullptr)
+	([this](int32 StatusCode, const FString& Error)
 	{
-		World->GetTimerManager().SetTimer(PingTimerHandle, this, &UPlaythrough::FirePing, TimeBetweenPings, true);
-	}
+		CharismaLogger::Log(-1, Error, CharismaLogger::Error);
+	});
+
+	SubscribePingTimer();
 }
 
 void UPlaythrough::Connect()
@@ -149,12 +160,14 @@ void UPlaythrough::Connect()
 		return;
 	}
 
+	PingCount = 0;
+	bCalledByDisconnect = false;
 	ChangeConnectionState(ECharismaPlaythroughConnectionState::Connecting);
 
 	ClientInstance = MakeShared<Client>(UCharismaAPI::SocketURL);
 	ClientInstance->JoinOrCreate<void>("chat",
 		{{"token", FStringToStdString(CurToken)}, {"playthroughId", FStringToStdString(CurPlaythroughUuid)},
-			{"sdkInfo", UPlaythrough::SdkInfo}},
+		 {"sdkInfo", UPlaythrough::SdkInfo}},
 		[this](TSharedPtr<MatchMakeError> Error, TSharedPtr<Room<void>> Room)
 		{
 			if (Error)
@@ -182,6 +195,8 @@ void UPlaythrough::Disconnect()
 	{
 		ClientInstance = nullptr;
 	}
+
+	UnsubscribePingTimer();
 }
 
 void UPlaythrough::Action(const FString& ConversationUuid, const FString& ActionName) const
@@ -445,7 +460,7 @@ void UPlaythrough::ReconnectionFlowCreate()
 {
 	ClientInstance->JoinOrCreate<void>("chat",
 		{{"token", FStringToStdString(CurToken)}, {"playthroughId", FStringToStdString(CurPlaythroughUuid)},
-			{"sdkInfo", UPlaythrough::SdkInfo}},
+		 {"sdkInfo", UPlaythrough::SdkInfo}},
 		[this](TSharedPtr<MatchMakeError> Error, TSharedPtr<Room<void>> Room)
 		{
 			if (Error)
@@ -487,5 +502,35 @@ void UPlaythrough::ChangeConnectionState(ECharismaPlaythroughConnectionState New
 		ECharismaPlaythroughConnectionState PreviousConnectionState = ConnectionState;
 		ConnectionState = NewConnectionState;
 		OnChangeConnectionState.Broadcast(PreviousConnectionState, NewConnectionState);
+	}
+}
+
+void UPlaythrough::SubscribePingTimer()
+{
+	UWorld* World = GEngine->GetWorldFromContextObject(CurWorldContextObject, EGetWorldErrorMode::ReturnNull);
+	
+	if (!World)
+		return;
+
+	if (!World->GetTimerManager().IsTimerActive(PingTimerHandle))
+	{
+		CharismaLogger::Log(1, "Subscribed to pings.", CharismaLogger::Info);
+		World->GetTimerManager().SetTimer(
+			PingTimerHandle,
+			this,
+			&UPlaythrough::FirePing,
+			TimeBetweenPings,
+			true
+			);
+	}
+}
+
+void UPlaythrough::UnsubscribePingTimer()
+{
+	CharismaLogger::Log(1, "Unsubscribed from pings.", CharismaLogger::Info);
+	UWorld* World = GEngine->GetWorldFromContextObject(CurWorldContextObject, EGetWorldErrorMode::ReturnNull);
+	if (World)
+	{
+		World->GetTimerManager().ClearTimer(PingTimerHandle);
 	}
 }

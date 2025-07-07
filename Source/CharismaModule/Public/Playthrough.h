@@ -164,6 +164,10 @@ private:
 	UFUNCTION()
 	FString GetSpeechRecognitionServiceString(const ECharismaSpeechRecognitionService Service);
 
+	void SubscribePingTimer();
+
+	void UnsubscribePingTimer();
+	
 	// Member
 
 	SpeechConfig GetSpeechConfig(const TArray<ECharismaSpeechAudioFormat> AudioFormat) const;
