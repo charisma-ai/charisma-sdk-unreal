@@ -163,7 +163,7 @@ void UPlaythrough::Connect()
 	PingCount = 0;
 	bCalledByDisconnect = false;
 	ChangeConnectionState(ECharismaPlaythroughConnectionState::Connecting);
-
+	
 	ClientInstance = MakeShared<Client>(UCharismaAPI::SocketURL);
 	ClientInstance->JoinOrCreate<void>("chat",
 		{{"token", FStringToStdString(CurToken)}, {"playthroughId", FStringToStdString(CurPlaythroughUuid)},
@@ -172,6 +172,11 @@ void UPlaythrough::Connect()
 		{
 			if (Error)
 			{
+				if (!ClientInstance.IsValid() || ConnectionState == ECharismaPlaythroughConnectionState::Disconnected)
+				{
+					return;
+				}
+				
 				this->ReconnectionFlowCreate();
 				return;
 			}
@@ -189,11 +194,11 @@ void UPlaythrough::Disconnect()
 	if (RoomInstance.IsValid())
 	{
 		RoomInstance->Leave();
-		RoomInstance = nullptr;
+		RoomInstance.Reset();
 	}
 	if (ClientInstance.IsValid())
 	{
-		ClientInstance = nullptr;
+		ClientInstance.Reset();
 	}
 
 	UnsubscribePingTimer();
@@ -447,6 +452,11 @@ void UPlaythrough::ReconnectionFlow()
 		{
 			if (Error)
 			{
+				if (!ClientInstance.IsValid() || ConnectionState == ECharismaPlaythroughConnectionState::Disconnected)
+				{
+					return;
+				}
+				
 				this->ReconnectionFlowCreate();
 				return;
 			}
@@ -527,8 +537,11 @@ void UPlaythrough::SubscribePingTimer()
 
 void UPlaythrough::UnsubscribePingTimer()
 {
-	CharismaLogger::Log(1, "Unsubscribed from pings.", CharismaLogger::Info);
-	UWorld* World = GEngine->GetWorldFromContextObject(CurWorldContextObject, EGetWorldErrorMode::ReturnNull);
+	UWorld* World = nullptr;
+	if (IsValid(CurWorldContextObject))
+	{
+		World = GEngine->GetWorldFromContextObject(CurWorldContextObject, EGetWorldErrorMode::ReturnNull);
+	}
 	if (World)
 	{
 		World->GetTimerManager().ClearTimer(PingTimerHandle);
