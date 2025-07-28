@@ -10,13 +10,12 @@
 	"DocsURL": "https://charisma.ai/docs",
 	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/product/b3608625a3004a4ea3d059ccb7166ccc",
 	"SupportURL": "https://charisma.ai/docs/troubleshooting#get-help",
-	"EngineVersion": "5.4.0",
 	"CanContainContent": true,
 	"IsBetaVersion": true,
 	"Installed": true,
 	"Modules": [
 		{
-			"Name": "CharismaModule",
+			"Name": "RuntimeAudioImporter",
 			"Type": "Runtime",
 			"LoadingPhase": "PreDefault",
 			"PlatformAllowList": [
@@ -25,9 +24,9 @@
 			]
 		},
 		{
-			"Name": "RuntimeAudioImporter",
+			"Name": "CharismaModule",
 			"Type": "Runtime",
-			"LoadingPhase": "PreDefault",
+			"LoadingPhase": "Default",
 			"PlatformAllowList": [
 				"Win64",
 				"Mac"
