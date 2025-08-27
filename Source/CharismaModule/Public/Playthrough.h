@@ -52,6 +52,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FErrorDelegate, const FCharismaError
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPingSuccessDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FPingFailureDelegate);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FSpeechRecognitionResultDelegate, const FString&, Transcript, bool, IsFinal);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FPlayerSessionIdDelegate, const FString&, SessionId);
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class CHARISMAMODULE_API UPlaythrough : public UObject
@@ -132,6 +133,15 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Charisma|Playthrough Events")
 	FSpeechRecognitionResultDelegate OnSpeechRecognitionResult;
+
+	UPROPERTY(BlueprintAssignable, Category = "Charisma|Playthrough Events")
+	FSpeechRecognitionResultDelegate OnSpeechRecognitionStarted;
+
+	UPROPERTY(BlueprintAssignable, Category = "Charisma|Playthrough Events")
+	FSpeechRecognitionResultDelegate OnSpeechRecognitionStopped;
+
+	UPROPERTY(BlueprintAssignable, Category = "Charisma|Playthrough Events")
+	FPlayerSessionIdDelegate OnPlayerSessionId;
 
 	UPROPERTY(BlueprintReadWrite, Category = "Charisma|Playthrough")
 	TArray<FCharismaEmotion> PlaythroughEmotions;

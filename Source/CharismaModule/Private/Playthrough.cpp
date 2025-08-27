@@ -102,7 +102,6 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 		[this](const msgpack::object& message)
 		{
 			FCharismaErrorEvent Event = message.as<FCharismaErrorEvent>();
-
 			CharismaLogger::Log(-1, Event.Error, CharismaLogger::Error);
 
 			OnError.Broadcast(Event);
@@ -114,6 +113,17 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 			PingCount = 0;
 			OnPingSuccess.Broadcast();
 			ChangeConnectionState(ECharismaPlaythroughConnectionState::Connected);
+		});
+	
+	this->RoomInstance->OnMessage("player-session-id",
+		[this](const msgpack::object& message)
+		{
+			FString Event = message.as<FString>();
+			CharismaLogger::Log(-1,
+				TEXT("Player session id: ") + Event,CharismaLogger::Info);
+			
+			OnPlayerSessionId.Broadcast(Event);
+			
 		});
 
 	this->RoomInstance->OnMessage("speech-recognition-error",
@@ -134,6 +144,28 @@ void UPlaythrough::OnRoomJoined(TSharedPtr<Room<void>> Room)
 			if (!Event.Text.IsEmpty())
 			{
 				OnSpeechRecognitionResult.Broadcast(Event.Text, Event.IsFinal);
+			}
+		});
+
+	this->RoomInstance->OnMessage("speech-recognition-started",
+		[this](const msgpack::object& message)
+		{
+			FCharismaSpeechRecognitionResultEvent Event = message.as<FCharismaSpeechRecognitionResultEvent>();
+
+			if (!Event.Text.IsEmpty())
+			{
+				OnSpeechRecognitionStarted.Broadcast(Event.Text, Event.IsFinal);
+			}
+		});
+
+	this->RoomInstance->OnMessage("speech-recognition-stopped",
+		[this](const msgpack::object& message)
+		{
+			FCharismaSpeechRecognitionResultEvent Event = message.as<FCharismaSpeechRecognitionResultEvent>();
+
+			if (!Event.Text.IsEmpty())
+			{
+				OnSpeechRecognitionStopped.Broadcast(Event.Text, Event.IsFinal);
 			}
 		});
 
