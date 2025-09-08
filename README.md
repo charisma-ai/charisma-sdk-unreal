@@ -1,6 +1,6 @@
 # Charisma SDK for Unreal Engine
 
-This Unreal Engine plugin is verified to work with C++ projects using engine versions `4.26`-`4.27` and `5.0`-`5.6` only. If you find the plugin also works in another version, feel free to submit a pull request to update this!
+This Unreal Engine plugin is verified to work with C++ projects using engine versions `5.2` and above. If you find the plugin also works in another version, feel free to submit a pull request to update this!
 
 
 If you have any questions or need a hand, please reach out to us at [hello@charisma.ai](mailto:hello@charisma.ai)!
@@ -189,3 +189,4 @@ To do this:
 - Modify the build configuration by adding the following lines: `bOverrideBuildEnvironment = true;` and `bForceEnableExceptions = true;`
 - If your project requires more specific compilation arguments, you can add `AdditionalCompilerArguments = "/EHsc";` **instead of** `bForceEnableExceptions`
 - The project should now package successfully. If not, you will now be able to see exceptions thrown by all the modules within the project.
+
